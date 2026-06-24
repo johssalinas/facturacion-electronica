@@ -1,0 +1,176 @@
+{
+ "actions": [],
+ "autoname": "field:nombre",
+ "creation": "2026-06-23 00:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Setup",
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "datos_section",
+   "fieldtype": "Section Break",
+   "label": "Datos del Dueño Fiscal"
+  },
+  {
+   "fieldname": "nombre",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nombre",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "razon_social",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Razon Social",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_nit",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "nit",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "NIT (sin DV)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "dv",
+   "fieldtype": "Data",
+   "label": "Digito de Verificacion"
+  },
+  {
+   "fieldname": "municipality_code",
+   "fieldtype": "Data",
+   "label": "Codigo Municipio (DIVIPOLA)",
+   "description": "Codigo del municipio donde opera el dueño fiscal."
+  },
+  {
+   "fieldname": "contacto_section",
+   "fieldtype": "Section Break",
+   "label": "Contacto y Establecimiento"
+  },
+  {
+   "fieldname": "direccion",
+   "fieldtype": "Data",
+   "label": "Direccion"
+  },
+  {
+   "fieldname": "telefono",
+   "fieldtype": "Data",
+   "label": "Telefono"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "col_resolucion",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "resolucion_dian",
+   "fieldtype": "Data",
+   "label": "Resolucion DIAN"
+  },
+  {
+   "fieldname": "prefijo",
+   "fieldtype": "Data",
+   "label": "Prefijo"
+  },
+  {
+   "fieldname": "rango_desde",
+   "fieldtype": "Int",
+   "label": "Rango Desde"
+  },
+  {
+   "fieldname": "rango_hasta",
+   "fieldtype": "Int",
+   "label": "Rango Hasta"
+  },
+  {
+   "fieldname": "numbering_range_id",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "ID Rango Numeracion Factus"
+  },
+  {
+   "fieldname": "credenciales_section",
+   "fieldtype": "Section Break",
+   "label": "Credenciales Factus (una cuenta por dueño)"
+  },
+  {
+   "fieldname": "client_id",
+   "fieldtype": "Data",
+   "label": "Client ID"
+  },
+  {
+   "fieldname": "client_secret",
+   "fieldtype": "Password",
+   "label": "Client Secret"
+  },
+  {
+   "fieldname": "col_cred",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "username",
+   "fieldtype": "Data",
+   "label": "Username (email Factus)"
+  },
+  {
+   "fieldname": "password",
+   "fieldtype": "Password",
+   "label": "Password"
+  },
+  {
+   "fieldname": "estado_section",
+   "fieldtype": "Section Break",
+   "label": "Estado"
+  },
+  {
+   "default": "1",
+   "fieldname": "activo",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Activo"
+  }
+ ],
+ "links": [],
+ "modified": "2026-06-23 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Facturacion Electronica",
+ "name": "Dueno Fiscal",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "nombre",
+ "sort_order": "ASC",
+ "track_changes": 1
+}

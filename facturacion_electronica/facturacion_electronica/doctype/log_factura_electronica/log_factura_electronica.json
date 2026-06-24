@@ -1,0 +1,197 @@
+{
+ "actions": [],
+ "autoname": "FE-LOG-.YYYY.-.#####",
+ "creation": "2026-06-23 00:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "referencia_section",
+   "fieldtype": "Section Break",
+   "label": "Documento Origen"
+  },
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Tipo Documento Origen",
+   "options": "DocType",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Documento Origen",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_ref",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "dueno_fiscal",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Dueño Fiscal",
+   "options": "Dueno Fiscal",
+   "reqd": 1
+  },
+  {
+   "fieldname": "tipo_operacion",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Tipo Operacion",
+   "options": "\nInmediata B2B\nResumen Diario CCF\nManual\nReintento"
+  },
+  {
+   "fieldname": "fecha",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Fecha Intento",
+   "reqd": 1
+  },
+  {
+   "fieldname": "factus_section",
+   "fieldtype": "Section Break",
+   "label": "Respuesta Factus / DIAN"
+  },
+  {
+   "fieldname": "reference_code",
+   "fieldtype": "Data",
+   "label": "Reference Code (Factus)"
+  },
+  {
+   "fieldname": "numero_factus",
+   "fieldtype": "Data",
+   "label": "Numero Factura Factus"
+  },
+  {
+   "fieldname": "col_factus",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "estado",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Estado",
+   "options": "\nPendiente\nEnviada\nValidada\nError\nEliminada",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_validated",
+   "fieldtype": "Check",
+   "label": "Validada por DIAN"
+  },
+  {
+   "fieldname": "validated_at",
+   "fieldtype": "Datetime",
+   "label": "Validada En"
+  },
+  {
+   "fieldname": "resultado_section",
+   "fieldtype": "Section Break",
+   "label": "Resultado Tecnico"
+  },
+  {
+   "fieldname": "cufe",
+   "fieldtype": "Long Text",
+   "label": "CUFE",
+   "read_only": 1
+  },
+  {
+   "fieldname": "qr_url",
+   "fieldtype": "Long Text",
+   "label": "URL QR",
+   "read_only": 1
+  },
+  {
+   "fieldname": "public_url",
+   "fieldtype": "Data",
+   "label": "URL Publica PDF",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_res",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mensaje",
+   "fieldtype": "Small Text",
+   "label": "Mensaje",
+   "read_only": 1
+  },
+  {
+   "fieldname": "errores",
+   "fieldtype": "Code",
+   "label": "Errores DIAN (JSON)",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payload_enviado",
+   "fieldtype": "Code",
+   "label": "Payload Enviado (JSON)",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "respuesta",
+   "fieldtype": "Code",
+   "label": "Respuesta (JSON)",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "intentos",
+   "fieldtype": "Int",
+   "label": "Intentos",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-06-23 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Facturacion Electronica",
+ "name": "Log Factura Electronica",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts User",
+   "share": 1,
+   "write": 0
+  }
+ ],
+ "sort_field": "fecha",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

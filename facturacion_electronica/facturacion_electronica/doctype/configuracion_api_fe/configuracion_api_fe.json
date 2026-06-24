@@ -1,0 +1,162 @@
+{
+ "actions": [],
+ "autoname": "FE-CONFIG",
+ "creation": "2026-06-23 00:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Setup",
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "ambiente_section",
+   "fieldtype": "Section Break",
+   "label": "Ambiente y Conexion"
+  },
+  {
+   "default": "Sandbox",
+   "fieldname": "ambiente",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Ambiente",
+   "options": "\nSandbox\nProduccion",
+   "reqd": 1
+  },
+  {
+   "default": "30",
+   "fieldname": "timeout",
+   "fieldtype": "Int",
+   "label": "Timeout (segundos)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "url_base",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "url_sandbox",
+   "fieldtype": "Data",
+   "label": "URL Sandbox",
+   "read_only": 1
+  },
+  {
+   "fieldname": "url_produccion",
+   "fieldtype": "Data",
+   "label": "URL Produccion",
+   "read_only": 1
+  },
+  {
+   "fieldname": "defaults_section",
+   "fieldtype": "Section Break",
+   "label": "Valores por Defecto"
+  },
+  {
+   "fieldname": "cliente_consumidor_final",
+   "fieldtype": "Link",
+   "label": "Cliente Consumidor Final",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "col_defaults_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "94",
+   "fieldname": "unidad_medida_default",
+   "fieldtype": "Data",
+   "label": "Unidad de Medida Default (Codigo)"
+  },
+  {
+   "default": "999",
+   "fieldname": "standard_code_default",
+   "fieldtype": "Data",
+   "label": "Standard Code Default"
+  },
+  {
+   "fieldname": "tax_defaults_section",
+   "fieldtype": "Section Break",
+   "label": "Impuestos por Defecto"
+  },
+  {
+   "default": "01",
+   "fieldname": "tax_code_default",
+   "fieldtype": "Select",
+   "label": "Codigo Impuesto Default",
+   "options": "\n01\n04\n35"
+  },
+  {
+   "default": "19.00",
+   "fieldname": "tax_rate_default",
+   "fieldtype": "Percent",
+   "label": "Tarifa Impuesto Default (%)"
+  },
+  {
+   "fieldname": "col_tax_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "tax_excluido_default",
+   "fieldtype": "Check",
+   "label": "Items Excluidos de Impuesto por Defecto"
+  },
+  {
+   "fieldname": "operacion_section",
+   "fieldtype": "Section Break",
+   "label": "Operacion"
+  },
+  {
+   "default": "1",
+   "fieldname": "enviar_email_automatico",
+   "fieldtype": "Check",
+   "label": "Factus envia email al cliente automaticamente"
+  },
+  {
+   "default": "3",
+   "fieldname": "reintentos_maximos",
+   "fieldtype": "Int",
+   "label": "Reintentos Maximos"
+  },
+  {
+   "fieldname": "col_op_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "activar_log_detallado",
+   "fieldtype": "Check",
+   "label": "Activar Log Detallado"
+  }
+ ],
+ "issingle": 1,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-06-23 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Facturacion Electronica",
+ "name": "Configuracion API FE",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
