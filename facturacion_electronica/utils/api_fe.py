@@ -275,23 +275,48 @@ def _get_payment_details(doc):
 	return details
 
 
+def _get_item_taxes(item, config):
+	taxes = []
+	for row in (item.get("taxes") or []):
+		template_name = row.get("item_tax_template") if hasattr(row, "get") else getattr(row, "item_tax_template", None)
+		if not template_name:
+			continue
+		try:
+			template = frappe.get_cached_doc("Item Tax Template", template_name)
+		except Exception:
+			continue
+		for tr in (template.taxes or []):
+			if not tr.tax_type:
+				continue
+			acc = frappe.get_cached_doc("Account", tr.tax_type)
+			code = cstr(acc.get("fe_tax_code"))
+			if not code:
+				continue
+			rate = flt(tr.tax_rate if tr.tax_rate is not None else 0, 2)
+			tax = {"code": code, "rate": str(rate)}
+			if acc.get("fe_is_excluded"):
+				tax["is_excluded"] = True
+				tax["rate"] = "0.00"
+			taxes.append(tax)
+	if not taxes:
+		code = config.tax_code_default or "01"
+		rate = config.tax_rate_default if config.tax_rate_default is not None else 19
+		tax = {"code": code, "rate": str(flt(rate, 2))}
+		if config.tax_excluido_default:
+			tax["is_excluded"] = True
+			tax["rate"] = "0.00"
+		taxes.append(tax)
+	return taxes
+
+
 def _get_item_obj(row, config):
 	item_code = row.get("item_code") if hasattr(row, "get") else getattr(row, "item_code", None)
 	item = frappe.get_cached_doc("Item", item_code)
-	tax_code = cstr(item.get("fe_tax_code")) or config.tax_code_default or "01"
-	tax_rate = item.get("fe_tax_rate")
-	if tax_rate is None:
-		tax_rate = flt(config.tax_rate_default or 19)
-	is_excluded = bool(item.get("fe_is_excluded")) or bool(config.tax_excluido_default)
 	net_rate = row.get("net_rate") if hasattr(row, "get") else getattr(row, "net_rate", None)
 	rate = row.get("rate") if hasattr(row, "get") else getattr(row, "rate", None)
 	price = flt(net_rate if net_rate is not None else rate, 2)
 	qty = row.get("qty") if hasattr(row, "get") else getattr(row, "qty", 0)
 	item_name = row.get("item_name") if hasattr(row, "get") else getattr(row, "item_name", None)
-	tax = {"code": tax_code, "rate": str(flt(tax_rate, 2))}
-	if is_excluded:
-		tax["is_excluded"] = True
-		tax["rate"] = "0.00"
 	return {
 		"code_reference": item_code or "SN",
 		"name": item_name or item.item_name,
@@ -300,7 +325,7 @@ def _get_item_obj(row, config):
 		"price": str(price),
 		"unit_measure_code": cstr(item.get("fe_unit_measure_code")) or config.unidad_medida_default or "94",
 		"standard_code": cstr(item.get("fe_standard_code")) or config.standard_code_default or "999",
-		"taxes": [tax],
+		"taxes": _get_item_taxes(item, config),
 	}
 
 

@@ -43,11 +43,10 @@ fixtures = [
 					"in",
 					[
 						"Item-dueno_fiscal",
-						"Item-fe_tax_code",
-						"Item-fe_tax_rate",
-						"Item-fe_is_excluded",
 						"Item-fe_unit_measure_code",
 						"Item-fe_standard_code",
+						"Account-fe_tax_code",
+						"Account-fe_is_excluded",
 						"Customer-requiere_factura_inmediata",
 						"Customer-fe_identification_document_code",
 						"Customer-fe_dv",
