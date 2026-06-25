@@ -40,28 +40,15 @@
  },
  {
   "doctype": "Custom Field",
-  "name": "Item-fe_unit_measure_code",
-  "dt": "Item",
+  "name": "UOM-fe_unit_measure_code",
+  "dt": "UOM",
   "fieldname": "fe_unit_measure_code",
   "fieldtype": "Data",
-  "label": "Unidad Medida FE (Codigo)",
-  "insert_after": "dueno_fiscal",
+  "label": "Codigo Unidad Medida FE (DIAN)",
+  "insert_after": "uom_name",
   "permlevel": 0,
   "print_hide": 1,
-  "default": "94",
-  "description": "94=Unidad, 70=Kilogramo, 8=Litro"
- },
- {
-  "doctype": "Custom Field",
-  "name": "Item-fe_standard_code",
-  "dt": "Item",
-  "fieldname": "fe_standard_code",
-  "fieldtype": "Data",
-  "label": "Standard Code FE",
-  "insert_after": "fe_unit_measure_code",
-  "permlevel": 0,
-  "print_hide": 1,
-  "default": "999"
+  "description": "Codigo DIAN de la unidad de medida. Si se deja vacio se infiere del nombre. Ej: 94=Unidad, KGM=Kilogramo, LTR=Litro, GRM=Gramo, MLT=Mililitro, MTR=Metro, BX=Caja, PK=Paquete, DZN=Docena, LBR=Libra, BO=Botella."
  },
  {
   "doctype": "Custom Field",

@@ -309,6 +309,54 @@ def _get_item_taxes(item, config):
 	return taxes
 
 
+UOM_NAME_MAP = {
+	"unidad": "94", "unit": "94", "units": "94", "nos": "94", "pieza": "94", "piece": "94", "unid": "94", "set": "94",
+	"kilogramo": "KGM", "kilo": "KGM", "kg": "KGM", "kilogram": "KGM",
+	"gramo": "GRM", "gram": "GRM",
+	"miligramo": "MGM",
+	"libra": "LBR", "lb": "LBR", "pound": "LBR",
+	"litro": "LTR", "litre": "LTR", "liter": "LTR",
+	"mililitro": "MLT", "ml": "MLT",
+	"galon": "GLL", "gallon": "GLL",
+	"metro": "MTR", "metre": "MTR", "meter": "MTR",
+	"centimetro": "CMT", "centimeter": "CMT",
+	"milimetro": "MMT",
+	"kilometro": "KTM", "kilometre": "KTM", "kilometer": "KTM",
+	"caja": "BX", "box": "BX",
+	"paquete": "PK", "pack": "PK", "package": "PK",
+	"docena": "DZN", "dozen": "DZN",
+	"onza": "ONZ", "ounce": "ONZ",
+	"botella": "BO", "bottle": "BO",
+	"frasco": "VI", "jar": "VI",
+	"saco": "SA", "sack": "SA",
+	"par": "PR", "pair": "PR",
+	"tableta": "U2", "tablet": "U2",
+	"tira": "SR", "strip": "SR",
+	"tubo": "TU", "tube": "TU",
+	"hora": "HUR", "hour": "HUR",
+	"rollo": "NRL", "roll": "NRL",
+}
+
+
+def _get_unit_measure(uom_name, config):
+	code = None
+	if uom_name:
+		try:
+			uom = frappe.get_cached_doc("UOM", uom_name)
+			code = cstr(uom.get("fe_unit_measure_code")) or None
+		except Exception:
+			pass
+		if not code:
+			key = cstr(uom_name).lower().strip()
+			code = UOM_NAME_MAP.get(key)
+			if not code:
+				for k, v in UOM_NAME_MAP.items():
+					if len(k) >= 4 and (k in key or key in k):
+						code = v
+						break
+	return code or cstr(config.unidad_medida_default) or "94"
+
+
 def _get_item_obj(row, config):
 	item_code = row.get("item_code") if hasattr(row, "get") else getattr(row, "item_code", None)
 	item = frappe.get_cached_doc("Item", item_code)
@@ -317,14 +365,15 @@ def _get_item_obj(row, config):
 	price = flt(net_rate if net_rate is not None else rate, 2)
 	qty = row.get("qty") if hasattr(row, "get") else getattr(row, "qty", 0)
 	item_name = row.get("item_name") if hasattr(row, "get") else getattr(row, "item_name", None)
+	uom_name = (row.get("uom") if hasattr(row, "get") else getattr(row, "uom", None)) or item.stock_uom
 	return {
 		"code_reference": item_code or "SN",
 		"name": item_name or item.item_name,
 		"quantity": str(flt(qty, 2)),
 		"discount_rate": "0.00",
 		"price": str(price),
-		"unit_measure_code": cstr(item.get("fe_unit_measure_code")) or config.unidad_medida_default or "94",
-		"standard_code": cstr(item.get("fe_standard_code")) or config.standard_code_default or "999",
+		"unit_measure_code": _get_unit_measure(uom_name, config),
+		"standard_code": cstr(config.standard_code_default) or "999",
 		"taxes": _get_item_taxes(item, config),
 	}
 
