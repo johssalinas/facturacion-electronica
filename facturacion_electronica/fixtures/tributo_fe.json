@@ -1,7 +1,32 @@
 [
-  {"doctype": "Tributo FE", "nombre": "IVA", "codigo": "01"},
-  {"doctype": "Tributo FE", "nombre": "IVA y Consumo", "codigo": "02"},
-  {"doctype": "Tributo FE", "nombre": "Excluido de IVA", "codigo": "03"},
-  {"doctype": "Tributo FE", "nombre": "No Responsable de IVA", "codigo": "04"},
-  {"doctype": "Tributo FE", "nombre": "No Aplica", "codigo": "ZZ"}
+  {
+    "doctype": "Tributo FE",
+    "nombre": "IVA",
+    "codigo": "01",
+    "name": "IVA"
+  },
+  {
+    "doctype": "Tributo FE",
+    "nombre": "IVA y Consumo",
+    "codigo": "02",
+    "name": "IVA y Consumo"
+  },
+  {
+    "doctype": "Tributo FE",
+    "nombre": "Excluido de IVA",
+    "codigo": "03",
+    "name": "Excluido de IVA"
+  },
+  {
+    "doctype": "Tributo FE",
+    "nombre": "No Responsable de IVA",
+    "codigo": "04",
+    "name": "No Responsable de IVA"
+  },
+  {
+    "doctype": "Tributo FE",
+    "nombre": "No Aplica",
+    "codigo": "ZZ",
+    "name": "No Aplica"
+  }
 ]

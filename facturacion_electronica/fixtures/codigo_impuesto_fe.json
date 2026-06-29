@@ -1,5 +1,20 @@
 [
-  {"doctype": "Codigo Impuesto FE", "nombre": "IVA", "codigo": "01"},
-  {"doctype": "Codigo Impuesto FE", "nombre": "Impuesto Nacional al Consumo", "codigo": "04"},
-  {"doctype": "Codigo Impuesto FE", "nombre": "Ultraprocesados", "codigo": "35"}
+  {
+    "doctype": "Codigo Impuesto FE",
+    "nombre": "IVA",
+    "codigo": "01",
+    "name": "IVA"
+  },
+  {
+    "doctype": "Codigo Impuesto FE",
+    "nombre": "Impuesto Nacional al Consumo",
+    "codigo": "04",
+    "name": "Impuesto Nacional al Consumo"
+  },
+  {
+    "doctype": "Codigo Impuesto FE",
+    "nombre": "Ultraprocesados",
+    "codigo": "35",
+    "name": "Ultraprocesados"
+  }
 ]

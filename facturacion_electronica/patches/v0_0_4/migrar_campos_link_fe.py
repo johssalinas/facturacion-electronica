@@ -75,15 +75,19 @@ MODO_PAGO_AUTO = {
 	"daviplata": "Transferencia",
 	"pse": "Transferencia",
 	"banco": "Transferencia",
+	"wire transfer": "Transferencia",
 	"tarjeta de credito": "Tarjeta de Cr\u00e9dito",
 	"tarjeta credito": "Tarjeta de Cr\u00e9dito",
 	"credito": "Tarjeta de Cr\u00e9dito",
+	"credit card": "Tarjeta de Cr\u00e9dito",
 	"tarjeta de debito": "Tarjeta de D\u00e9bito",
 	"tarjeta debito": "Tarjeta de D\u00e9bito",
 	"debito": "Tarjeta de D\u00e9bito",
+	"debit card": "Tarjeta de D\u00e9bito",
 	"cheque": "Cheque",
 	"consignacion": "Consignaci\u00f3n",
 	"consignaci\u00f3n": "Consignaci\u00f3n",
+	"bank draft": "Consignaci\u00f3n",
 }
 
 

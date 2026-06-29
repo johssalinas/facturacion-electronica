@@ -1,9 +1,44 @@
 [
-  {"doctype": "Tipo Medio Pago FE", "nombre": "Efectivo", "codigo": "10"},
-  {"doctype": "Tipo Medio Pago FE", "nombre": "Cheque", "codigo": "20"},
-  {"doctype": "Tipo Medio Pago FE", "nombre": "Consignaci\u00f3n", "codigo": "42"},
-  {"doctype": "Tipo Medio Pago FE", "nombre": "Transferencia", "codigo": "47"},
-  {"doctype": "Tipo Medio Pago FE", "nombre": "Tarjeta de Cr\u00e9dito", "codigo": "48"},
-  {"doctype": "Tipo Medio Pago FE", "nombre": "Tarjeta de D\u00e9bito", "codigo": "49"},
-  {"doctype": "Tipo Medio Pago FE", "nombre": "No Especificado", "codigo": "ZZZ"}
+  {
+    "doctype": "Tipo Medio Pago FE",
+    "nombre": "Efectivo",
+    "codigo": "10",
+    "name": "Efectivo"
+  },
+  {
+    "doctype": "Tipo Medio Pago FE",
+    "nombre": "Cheque",
+    "codigo": "20",
+    "name": "Cheque"
+  },
+  {
+    "doctype": "Tipo Medio Pago FE",
+    "nombre": "Consignaci\u00f3n",
+    "codigo": "42",
+    "name": "Consignaci\u00f3n"
+  },
+  {
+    "doctype": "Tipo Medio Pago FE",
+    "nombre": "Transferencia",
+    "codigo": "47",
+    "name": "Transferencia"
+  },
+  {
+    "doctype": "Tipo Medio Pago FE",
+    "nombre": "Tarjeta de Cr\u00e9dito",
+    "codigo": "48",
+    "name": "Tarjeta de Cr\u00e9dito"
+  },
+  {
+    "doctype": "Tipo Medio Pago FE",
+    "nombre": "Tarjeta de D\u00e9bito",
+    "codigo": "49",
+    "name": "Tarjeta de D\u00e9bito"
+  },
+  {
+    "doctype": "Tipo Medio Pago FE",
+    "nombre": "No Especificado",
+    "codigo": "ZZZ",
+    "name": "No Especificado"
+  }
 ]

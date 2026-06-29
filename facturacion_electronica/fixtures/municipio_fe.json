@@ -1,7 +1,32 @@
 [
-  {"doctype": "Municipio FE", "nombre": "Bucaramanga", "codigo": "68001"},
-  {"doctype": "Municipio FE", "nombre": "Floridablanca", "codigo": "68276"},
-  {"doctype": "Municipio FE", "nombre": "Gir\u00f3n", "codigo": "68406"},
-  {"doctype": "Municipio FE", "nombre": "Lebrija", "codigo": "68417"},
-  {"doctype": "Municipio FE", "nombre": "Piedecuesta", "codigo": "68547"}
+  {
+    "doctype": "Municipio FE",
+    "nombre": "Bucaramanga",
+    "codigo": "68001",
+    "name": "Bucaramanga"
+  },
+  {
+    "doctype": "Municipio FE",
+    "nombre": "Floridablanca",
+    "codigo": "68276",
+    "name": "Floridablanca"
+  },
+  {
+    "doctype": "Municipio FE",
+    "nombre": "Gir\u00f3n",
+    "codigo": "68406",
+    "name": "Gir\u00f3n"
+  },
+  {
+    "doctype": "Municipio FE",
+    "nombre": "Lebrija",
+    "codigo": "68417",
+    "name": "Lebrija"
+  },
+  {
+    "doctype": "Municipio FE",
+    "nombre": "Piedecuesta",
+    "codigo": "68547",
+    "name": "Piedecuesta"
+  }
 ]

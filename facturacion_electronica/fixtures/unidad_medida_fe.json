@@ -1,27 +1,152 @@
 [
-  {"doctype": "Unidad Medida FE", "nombre": "Unidad", "codigo": "94"},
-  {"doctype": "Unidad Medida FE", "nombre": "Kilogramo", "codigo": "KGM"},
-  {"doctype": "Unidad Medida FE", "nombre": "Gramo", "codigo": "GRM"},
-  {"doctype": "Unidad Medida FE", "nombre": "Miligramo", "codigo": "MGM"},
-  {"doctype": "Unidad Medida FE", "nombre": "Libra", "codigo": "LBR"},
-  {"doctype": "Unidad Medida FE", "nombre": "Litro", "codigo": "LTR"},
-  {"doctype": "Unidad Medida FE", "nombre": "Mililitro", "codigo": "MLT"},
-  {"doctype": "Unidad Medida FE", "nombre": "Gal\u00f3n", "codigo": "GLL"},
-  {"doctype": "Unidad Medida FE", "nombre": "Metro", "codigo": "MTR"},
-  {"doctype": "Unidad Medida FE", "nombre": "Cent\u00edmetro", "codigo": "CMT"},
-  {"doctype": "Unidad Medida FE", "nombre": "Mil\u00edmetro", "codigo": "MMT"},
-  {"doctype": "Unidad Medida FE", "nombre": "Kil\u00f3metro", "codigo": "KTM"},
-  {"doctype": "Unidad Medida FE", "nombre": "Caja", "codigo": "BX"},
-  {"doctype": "Unidad Medida FE", "nombre": "Paquete", "codigo": "PK"},
-  {"doctype": "Unidad Medida FE", "nombre": "Docena", "codigo": "DZN"},
-  {"doctype": "Unidad Medida FE", "nombre": "Onza", "codigo": "ONZ"},
-  {"doctype": "Unidad Medida FE", "nombre": "Botella", "codigo": "BO"},
-  {"doctype": "Unidad Medida FE", "nombre": "Frasco", "codigo": "VI"},
-  {"doctype": "Unidad Medida FE", "nombre": "Saco", "codigo": "SA"},
-  {"doctype": "Unidad Medida FE", "nombre": "Par", "codigo": "PR"},
-  {"doctype": "Unidad Medida FE", "nombre": "Tableta", "codigo": "U2"},
-  {"doctype": "Unidad Medida FE", "nombre": "Tira", "codigo": "SR"},
-  {"doctype": "Unidad Medida FE", "nombre": "Tubo", "codigo": "TU"},
-  {"doctype": "Unidad Medida FE", "nombre": "Hora", "codigo": "HUR"},
-  {"doctype": "Unidad Medida FE", "nombre": "Rollo", "codigo": "NRL"}
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Unidad",
+    "codigo": "94",
+    "name": "Unidad"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Kilogramo",
+    "codigo": "KGM",
+    "name": "Kilogramo"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Gramo",
+    "codigo": "GRM",
+    "name": "Gramo"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Miligramo",
+    "codigo": "MGM",
+    "name": "Miligramo"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Libra",
+    "codigo": "LBR",
+    "name": "Libra"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Litro",
+    "codigo": "LTR",
+    "name": "Litro"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Mililitro",
+    "codigo": "MLT",
+    "name": "Mililitro"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Gal\u00f3n",
+    "codigo": "GLL",
+    "name": "Gal\u00f3n"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Metro",
+    "codigo": "MTR",
+    "name": "Metro"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Cent\u00edmetro",
+    "codigo": "CMT",
+    "name": "Cent\u00edmetro"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Mil\u00edmetro",
+    "codigo": "MMT",
+    "name": "Mil\u00edmetro"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Kil\u00f3metro",
+    "codigo": "KTM",
+    "name": "Kil\u00f3metro"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Caja",
+    "codigo": "BX",
+    "name": "Caja"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Paquete",
+    "codigo": "PK",
+    "name": "Paquete"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Docena",
+    "codigo": "DZN",
+    "name": "Docena"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Onza",
+    "codigo": "ONZ",
+    "name": "Onza"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Botella",
+    "codigo": "BO",
+    "name": "Botella"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Frasco",
+    "codigo": "VI",
+    "name": "Frasco"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Saco",
+    "codigo": "SA",
+    "name": "Saco"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Par",
+    "codigo": "PR",
+    "name": "Par"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Tableta",
+    "codigo": "U2",
+    "name": "Tableta"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Tira",
+    "codigo": "SR",
+    "name": "Tira"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Tubo",
+    "codigo": "TU",
+    "name": "Tubo"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Hora",
+    "codigo": "HUR",
+    "name": "Hora"
+  },
+  {
+    "doctype": "Unidad Medida FE",
+    "nombre": "Rollo",
+    "codigo": "NRL",
+    "name": "Rollo"
+  }
 ]
