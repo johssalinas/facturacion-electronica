@@ -123,9 +123,12 @@ def _auto_asignar_modos_pago():
 					tipo = v
 					break
 		if tipo:
-			frappe.db.set_value(
-				"Mode of Payment", row.name, "fe_tipo_medio_pago", tipo, update_modified=False
-			)
+			try:
+				frappe.db.set_value(
+					"Mode of Payment", row.name, "fe_tipo_medio_pago", tipo, update_modified=False
+				)
+			except Exception:
+				pass
 
 
 def _migrar_configuracion_api_fe():
