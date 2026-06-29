@@ -19,6 +19,22 @@ from facturacion_electronica.facturacion_electronica.doctype.log_factura_electro
 	crear_log,
 )
 
+def _fe_codigo(doctype_name, value, fallback=None):
+	"""Busca el codigo DIAN desde un campo Link a un DocType FE.
+
+	Compatibilidad hacia atras: si el valor es un codigo raw (formato antiguo
+	anterior a la migracion a Link), lo verifica y lo devuelve tal cual.
+	"""
+	if not value:
+		return fallback
+	codigo = frappe.db.get_value(doctype_name, value, "codigo")
+	if codigo:
+		return codigo
+	if frappe.db.exists(doctype_name, {"codigo": value}):
+		return value
+	return fallback
+
+
 MODO_PAGO_MAP = {
 	"efectivo": "10",
 	"cash": "10",
@@ -198,15 +214,19 @@ def _get_customer_address(cust):
 def _get_customer_obj(customer):
 	cust = frappe.get_cached_doc("Customer", customer)
 	is_company = cust.customer_type == "Company"
-	id_doc = cstr(cust.get("fe_identification_document_code")) or ("31" if is_company else "13")
-	identification = cstr(cust.tax_id or "").replace("-", "").strip()
+	id_doc = _fe_codigo(
+		"Tipo Documento Identidad FE",
+		cust.get("fe_identification_document_code"),
+		fallback="31" if is_company else "13",
+	)
+	identification = cstr(cust.get("fe_numero_documento") or cust.tax_id or "").replace("-", "").strip()
 	if not identification:
 		identification = "22222222222" if not is_company else cust.name
 	obj = {
 		"identification_document_code": id_doc,
 		"identification": identification,
 		"legal_organization_code": "1" if is_company else "2",
-		"tribute_code": cstr(cust.get("fe_tribute_code")) or "ZZ",
+		"tribute_code": _fe_codigo("Tributo FE", cust.get("fe_tribute_code"), fallback="ZZ"),
 	}
 	if is_company:
 		obj["company"] = cust.customer_name
@@ -229,7 +249,7 @@ def _get_customer_obj(customer):
 		obj["email"] = email
 	if phone:
 		obj["phone"] = phone
-	muni = cstr(cust.get("fe_municipality_code"))
+	muni = _fe_codigo("Municipio FE", cust.get("fe_municipality_code"))
 	if muni:
 		obj["municipality_code"] = muni
 	return obj
@@ -238,6 +258,15 @@ def _get_customer_obj(customer):
 def _get_metodo_pago(mode_of_payment):
 	if not mode_of_payment:
 		return "ZZZ"
+	try:
+		mop = frappe.get_cached_doc("Mode of Payment", mode_of_payment)
+		tipo = mop.get("fe_tipo_medio_pago")
+		if tipo:
+			codigo = _fe_codigo("Tipo Medio Pago FE", tipo)
+			if codigo:
+				return codigo
+	except Exception:
+		pass
 	key = mode_of_payment.lower().strip()
 	if key in MODO_PAGO_MAP:
 		return MODO_PAGO_MAP[key]
@@ -289,7 +318,7 @@ def _get_item_taxes(item, config):
 			if not tr.tax_type:
 				continue
 			acc = frappe.get_cached_doc("Account", tr.tax_type)
-			code = cstr(acc.get("fe_tax_code"))
+			code = _fe_codigo("Codigo Impuesto FE", acc.get("fe_tax_code"))
 			if not code:
 				continue
 			rate = flt(tr.tax_rate if tr.tax_rate is not None else 0, 2)
@@ -299,7 +328,7 @@ def _get_item_taxes(item, config):
 				tax["rate"] = "0.00"
 			taxes.append(tax)
 	if not taxes:
-		code = config.tax_code_default or "01"
+		code = _fe_codigo("Codigo Impuesto FE", config.tax_code_default, fallback="01")
 		rate = config.tax_rate_default if config.tax_rate_default is not None else 19
 		tax = {"code": code, "rate": str(flt(rate, 2))}
 		if config.tax_excluido_default:
@@ -343,7 +372,7 @@ def _get_unit_measure(uom_name, config):
 	if uom_name:
 		try:
 			uom = frappe.get_cached_doc("UOM", uom_name)
-			code = cstr(uom.get("fe_unit_measure_code")) or None
+			code = _fe_codigo("Unidad Medida FE", uom.get("fe_unit_measure_code"))
 		except Exception:
 			pass
 		if not code:
@@ -354,7 +383,7 @@ def _get_unit_measure(uom_name, config):
 					if len(k) >= 4 and (k in key or key in k):
 						code = v
 						break
-	return code or cstr(config.unidad_medida_default) or "94"
+	return code or _fe_codigo("Unidad Medida FE", config.unidad_medida_default, fallback="94")
 
 
 def _get_item_obj(row, config):

@@ -1,0 +1,9 @@
+[
+  {"doctype": "Tipo Medio Pago FE", "nombre": "Efectivo", "codigo": "10"},
+  {"doctype": "Tipo Medio Pago FE", "nombre": "Cheque", "codigo": "20"},
+  {"doctype": "Tipo Medio Pago FE", "nombre": "Consignaci\u00f3n", "codigo": "42"},
+  {"doctype": "Tipo Medio Pago FE", "nombre": "Transferencia", "codigo": "47"},
+  {"doctype": "Tipo Medio Pago FE", "nombre": "Tarjeta de Cr\u00e9dito", "codigo": "48"},
+  {"doctype": "Tipo Medio Pago FE", "nombre": "Tarjeta de D\u00e9bito", "codigo": "49"},
+  {"doctype": "Tipo Medio Pago FE", "nombre": "No Especificado", "codigo": "ZZZ"}
+]

@@ -1,0 +1,9 @@
+[
+  {"doctype": "Tipo Documento Identidad FE", "nombre": "C\u00e9dula de Ciudadan\u00eda", "codigo": "13"},
+  {"doctype": "Tipo Documento Identidad FE", "nombre": "NIT", "codigo": "31"},
+  {"doctype": "Tipo Documento Identidad FE", "nombre": "C\u00e9dula de Extranjer\u00eda", "codigo": "22"},
+  {"doctype": "Tipo Documento Identidad FE", "nombre": "Pasaporte", "codigo": "41"},
+  {"doctype": "Tipo Documento Identidad FE", "nombre": "PPT", "codigo": "42"},
+  {"doctype": "Tipo Documento Identidad FE", "nombre": "NIT Otro Pa\u00eds", "codigo": "50"},
+  {"doctype": "Tipo Documento Identidad FE", "nombre": "NUIP", "codigo": "91"}
+]

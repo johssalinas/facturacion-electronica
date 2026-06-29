@@ -1,0 +1,5 @@
+[
+  {"doctype": "Codigo Impuesto FE", "nombre": "IVA", "codigo": "01"},
+  {"doctype": "Codigo Impuesto FE", "nombre": "Impuesto Nacional al Consumo", "codigo": "04"},
+  {"doctype": "Codigo Impuesto FE", "nombre": "Ultraprocesados", "codigo": "35"}
+]

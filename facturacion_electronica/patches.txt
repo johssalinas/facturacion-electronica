@@ -1,2 +1,3 @@
 facturacion_electronica.patches.v0_0_2.remove_item_fe_tax_fields
 facturacion_electronica.patches.v0_0_3.remove_item_fe_uom_standard_fields
+facturacion_electronica.patches.v0_0_4.migrar_campos_link_fe

@@ -25,6 +25,12 @@ def get_credenciales(dueno_name):
 		frappe.throw(_("El dueño fiscal {0} no esta activo").format(dueno_name))
 	secret = get_decrypted_password("Dueno Fiscal", dueno.name, "client_secret", raise_exception=False) or ""
 	password = get_decrypted_password("Dueno Fiscal", dueno.name, "password", raise_exception=False) or ""
+	muni_code = ""
+	if dueno.municipality_code:
+		muni_code = (
+			frappe.db.get_value("Municipio FE", dueno.municipality_code, "codigo")
+			or dueno.municipality_code
+		)
 	return {
 		"nombre": dueno.name,
 		"nit": dueno.nit,
@@ -33,7 +39,7 @@ def get_credenciales(dueno_name):
 		"direccion": dueno.direccion,
 		"telefono": dueno.telefono,
 		"email": dueno.email,
-		"municipality_code": dueno.municipality_code,
+		"municipality_code": muni_code,
 		"numbering_range_id": dueno.numbering_range_id,
 		"client_id": dueno.client_id,
 		"client_secret": secret,

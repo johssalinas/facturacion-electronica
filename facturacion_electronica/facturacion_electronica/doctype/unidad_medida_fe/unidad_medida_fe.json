@@ -1,0 +1,67 @@
+{
+ "actions": [],
+ "autoname": "field:nombre",
+ "creation": "2026-06-29 00:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Setup",
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "datos_section",
+   "fieldtype": "Section Break",
+   "label": "Unidad de Medida"
+  },
+  {
+   "fieldname": "nombre",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nombre",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "col_codigo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "codigo",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Codigo DIAN",
+   "reqd": 1,
+   "description": "Codigo de unidad de medida segun DIAN. Ej: 94=Unidad, KGM=Kilogramo, GRM=Gramo, LBR=Libra, LTR=Litro, MLT=Mililitro, MTR=Metro, BX=Caja, PK=Paquete, DZN=Docena, BO=Botella."
+  }
+ ],
+ "links": [],
+ "modified": "2026-06-29 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Facturacion Electronica",
+ "name": "Unidad Medida FE",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "nombre",
+ "sort_order": "ASC",
+ "track_changes": 1
+}

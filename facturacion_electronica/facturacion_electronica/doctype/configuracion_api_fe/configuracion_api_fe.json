@@ -59,10 +59,11 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "94",
+   "default": "Unidad",
    "fieldname": "unidad_medida_default",
-   "fieldtype": "Data",
-   "label": "Unidad de Medida Default (Codigo)"
+   "fieldtype": "Link",
+   "label": "Unidad de Medida Default",
+   "options": "Unidad Medida FE"
   },
   {
    "default": "999",
@@ -76,11 +77,11 @@
    "label": "Impuestos por Defecto"
   },
   {
-   "default": "01",
+   "default": "IVA",
    "fieldname": "tax_code_default",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "label": "Codigo Impuesto Default",
-   "options": "\n01\n04\n35"
+   "options": "Codigo Impuesto FE"
   },
   {
    "default": "19.00",

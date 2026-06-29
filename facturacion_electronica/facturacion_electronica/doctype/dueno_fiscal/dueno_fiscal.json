@@ -44,9 +44,10 @@
   },
   {
    "fieldname": "municipality_code",
-   "fieldtype": "Data",
-   "label": "Codigo Municipio (DIVIPOLA)",
-   "description": "Codigo del municipio donde opera el dueño fiscal."
+   "fieldtype": "Link",
+   "label": "Municipio FE (DIVIPOLA)",
+   "options": "Municipio FE",
+   "description": "Municipio donde opera el due\u00f1o fiscal."
   },
   {
    "fieldname": "contacto_section",

@@ -48,6 +48,7 @@ fixtures = [
 						"UOM-fe_unit_measure_code",
 						"Customer-requiere_factura_inmediata",
 						"Customer-fe_identification_document_code",
+						"Customer-fe_numero_documento",
 						"Customer-fe_dv",
 						"Customer-fe_tribute_code",
 						"Customer-fe_municipality_code",
@@ -63,11 +64,18 @@ fixtures = [
 						"POS Invoice-custom_enviar_dian",
 						"POS Invoice-es_resumen_diario_ccf",
 						"POS Invoice-cufe_fe",
+						"Mode of Payment-fe_tipo_medio_pago",
 					],
 				]
 			]
 		},
-	]
+	],
+	["Tipo Documento Identidad FE", {}],
+	["Tributo FE", {}],
+	["Municipio FE", {}],
+	["Codigo Impuesto FE", {}],
+	["Unidad Medida FE", {}],
+	["Tipo Medio Pago FE", {}],
 ]
 
 doctype_js = {

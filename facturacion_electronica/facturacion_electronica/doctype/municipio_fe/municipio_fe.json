@@ -1,0 +1,67 @@
+{
+ "actions": [],
+ "autoname": "field:nombre",
+ "creation": "2026-06-29 00:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Setup",
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "datos_section",
+   "fieldtype": "Section Break",
+   "label": "Municipio"
+  },
+  {
+   "fieldname": "nombre",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nombre",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "col_codigo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "codigo",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Codigo DIVIPOLA",
+   "reqd": 1,
+   "description": "Codigo DIVIPOLA del municipio. Ej: 68001=Bucaramanga, 68276=Floridablanca, 68406=Giron, 68417=Lebrija, 68547=Piedecuesta."
+  }
+ ],
+ "links": [],
+ "modified": "2026-06-29 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Facturacion Electronica",
+ "name": "Municipio FE",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "nombre",
+ "sort_order": "ASC",
+ "track_changes": 1
+}
