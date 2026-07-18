@@ -10,6 +10,7 @@ app_version = "0.0.1"
 
 required_apps = ["erpnext"]
 
+boot_session = "facturacion_electronica.events.auth.boot_session"
 on_login = "facturacion_electronica.events.auth.on_login"
 
 override_doctype_class = {
@@ -86,4 +87,4 @@ doctype_js = {
 	"POS Closing Entry": "public/js/pos_closing_entry.js",
 }
 
-app_include_js = []
+app_include_js = ["public/js/desktop_redirect.js"]
