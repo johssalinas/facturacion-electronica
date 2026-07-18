@@ -10,6 +10,8 @@ app_version = "0.0.1"
 
 required_apps = ["erpnext"]
 
+on_login = "facturacion_electronica.events.auth.on_login"
+
 override_doctype_class = {
 	"POS Invoice": "facturacion_electronica.overrides.pos_invoice.CustomPOSInvoice",
 }

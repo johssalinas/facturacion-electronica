@@ -1,0 +1,770 @@
+HEAD;Marca;Proveedor (Proveedor del Producto);Número de Documento;Empresa Matriz;NIT / CC
+0;Las marias;*;*;Las Marías S.A.;890.102.058-4
+1;Fazenda;*;*;Fazenda S.A.S.;N/D
+2;Fazenda;*;*;Fazenda S.A.S.;N/D
+3;Blancox;*;*;Blancox S.A.;N/D
+4;Blancox;*;*;Blancox S.A.;N/D
+5;Blancox;*;*;Blancox S.A.;N/D
+6;Blancox;*;*;Blancox S.A.;N/D
+7;Aromax;*;*;Aromax S.A.;N/D
+8;Ranchera;*;*;Ranchera S.A.;N/D
+9;Ranchera;*;*;Ranchera S.A.;N/D
+10;Ranchera;*;*;Ranchera S.A.;N/D
+11;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+12;Rica;*;*;Fábrica de Embutidos Rica S.A.;890.102.043-6
+13;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+14;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+15;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+16;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+17;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+18;Mac Pollo;*;*;Mac Pollo S.A.;890.102.052-6
+19;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+20;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+21;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+22;Becker;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+23;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+24;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+25;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+26;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+27;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+28;Becker;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+29;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+30;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+31;Mac Pollo;*;*;Mac Pollo S.A.;890.102.052-6
+32;Mac Pollo;*;*;Mac Pollo S.A.;890.102.052-6
+33;Carfrisan;*;*;Productos Cárnicos Carfrisan S.A.;890.100.166-9
+34;Carfrisan;*;*;Productos Cárnicos Carfrisan S.A.;890.100.166-9
+35;Carfrisan;*;*;Productos Cárnicos Carfrisan S.A.;890.100.166-9
+36;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+37;Cacique;*;*;Cacique S.A.S.;N/D
+38;Becker;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+39;Carfrisan;*;*;Productos Cárnicos Carfrisan S.A.;890.100.166-9
+40;Delichicks;*;*;Delichicks S.A.S.;N/D
+41;Delichicks;*;*;Delichicks S.A.S.;N/D
+42;Carfrisan;*;*;Productos Cárnicos Carfrisan S.A.;890.100.166-9
+43;Delichicks;*;*;Delichicks S.A.S.;N/D
+44;Delichicks;*;*;Delichicks S.A.S.;N/D
+45;Delichicks;*;*;Delichicks S.A.S.;N/D
+46;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+47;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+48;Cacique;*;*;Cacique S.A.S.;N/D
+49;Cacique;*;*;Cacique S.A.S.;N/D
+50;Rica;*;*;Fábrica de Embutidos Rica S.A.;890.102.043-6
+51;Rica;*;*;Fábrica de Embutidos Rica S.A.;890.102.043-6
+52;Salsan;*;*;Salsan S.A.;890.100.503-1
+53;Salsan;*;*;Salsan S.A.;890.100.503-1
+54;Carfrisan;*;*;Productos Cárnicos Carfrisan S.A.;890.100.166-9
+55;Carfrisan;*;*;Productos Cárnicos Carfrisan S.A.;890.100.166-9
+56;Carfrisan;*;*;Productos Cárnicos Carfrisan S.A.;890.100.166-9
+57;Colombo Alemana;*;*;Productos Alimenticios Colombo Alemana S.A.;890.300.402-7
+58;Colombo Alemana;*;*;Productos Alimenticios Colombo Alemana S.A.;890.300.402-7
+59;New pig;*;*;New Pig Latin America S.A.S.;N/D
+60;New pig;*;*;New Pig Latin America S.A.S.;N/D
+61;Delichick;*;*;Delichicks S.A.S.;N/D
+62;Delichick;*;*;Delichicks S.A.S.;N/D
+63;Delichick;*;*;Delichicks S.A.S.;N/D
+64;Rica;*;*;Fábrica de Embutidos Rica S.A.;890.102.043-6
+65;Rica;*;*;Fábrica de Embutidos Rica S.A.;890.102.043-6
+66;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+67;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+68;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+69;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+70;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+71;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+72;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+73;Pietran;*;*;Pietran S.A.S.;N/D
+74;Rica;*;*;Fábrica de Embutidos Rica S.A.;890.102.043-6
+75;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+76;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+77;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+78;Salsan;*;*;Salsan S.A.;890.100.503-1
+79;Salsan;*;*;Salsan S.A.;890.100.503-1
+80;Salsan;*;*;Salsan S.A.;890.100.503-1
+81;Salsan;*;*;Salsan S.A.;890.100.503-1
+82;Kimby;*;*;Kimby S.A.;890.100.054-5
+83;Kimby;*;*;Kimby S.A.;890.100.054-5
+84;Rica;*;*;Fábrica de Embutidos Rica S.A.;890.102.043-6
+85;Carfrisan;*;*;Productos Cárnicos Carfrisan S.A.;890.100.166-9
+86;Carfrisan;*;*;Productos Cárnicos Carfrisan S.A.;890.100.166-9
+87;Carfrisan;*;*;Productos Cárnicos Carfrisan S.A.;890.100.166-9
+88;Cacique;*;*;Cacique S.A.S.;N/D
+89;Cacique;*;*;Cacique S.A.S.;N/D
+90;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+91;Delichicks;*;*;Delichicks S.A.S.;N/D
+92;Cacique;*;*;Cacique S.A.S.;N/D
+93;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+94;Kimby;*;*;Kimby S.A.;890.100.054-5
+95;Kimby;*;*;Kimby S.A.;890.100.054-5
+96;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+97;Procarsan;*;*;Procarsan S.A.;N/D
+98;Carfrisan;*;*;Productos Cárnicos Carfrisan S.A.;890.100.166-9
+99;Carfrisan;*;*;Productos Cárnicos Carfrisan S.A.;890.100.166-9
+100;Cacique;*;*;Cacique S.A.S.;N/D
+101;Rica;*;*;Fábrica de Embutidos Rica S.A.;890.102.043-6
+102;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+103;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+104;Rica;*;*;Fábrica de Embutidos Rica S.A.;890.102.043-6
+105;Iberico;*;*;Embutidos Iberico S.A.;N/D
+106;Iberico;*;*;Embutidos Iberico S.A.;N/D
+107;Iberico;*;*;Embutidos Iberico S.A.;N/D
+108;Iberico;*;*;Embutidos Iberico S.A.;N/D
+109;Iberico;*;*;Embutidos Iberico S.A.;N/D
+110;Iberico;*;*;Embutidos Iberico S.A.;N/D
+111;Iberico;*;*;Embutidos Iberico S.A.;N/D
+112;Colombo Alemana;*;*;Productos Alimenticios Colombo Alemana S.A.;890.300.402-7
+113;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+114;Pietran;*;*;Pietran S.A.S.;N/D
+115;Iberico;*;*;Embutidos Iberico S.A.;N/D
+116;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+117;Colombo Alemana;*;*;Productos Alimenticios Colombo Alemana S.A.;890.300.402-7
+118;Ranchero;*;*;Ranchero S.A.;N/D
+119;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+120;Salsan;*;*;Salsan S.A.;890.100.503-1
+121;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+122;Delichicks;*;*;Delichicks S.A.S.;N/D
+123;Cacique;*;*;Cacique S.A.S.;N/D
+124;Becker;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+125;Carfrisan;*;*;Productos Cárnicos Carfrisan S.A.;890.100.166-9
+126;Salsan;*;*;Salsan S.A.;890.100.503-1
+127;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+128;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+129;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+130;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+131;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+132;Salsan;*;*;Salsan S.A.;890.100.503-1
+133;Rica;*;*;Fábrica de Embutidos Rica S.A.;890.102.043-6
+134;Fazenda;*;*;Fazenda S.A.S.;N/D
+135;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+136;Mac Pollo;*;*;Mac Pollo S.A.;890.102.052-6
+137;Rica;*;*;Fábrica de Embutidos Rica S.A.;890.102.043-6
+138;Rica;*;*;Fábrica de Embutidos Rica S.A.;890.102.043-6
+139;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+140;Bary;*;*;Bary S.A.;890.102.039-8
+141;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+142;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+143;Fazenda;*;*;Fazenda S.A.S.;N/D
+144;Pietran;*;*;Pietran S.A.S.;N/D
+145;Alpina;*;*;Alpina Productos Naturales S.A.;890.000.121-6
+146;Alpina;*;*;Alpina Productos Naturales S.A.;890.000.121-6
+147;Alpina;*;*;Alpina Productos Naturales S.A.;890.000.121-6
+148;Alpina;*;*;Alpina Productos Naturales S.A.;890.000.121-6
+149;Alpina;*;*;Alpina Productos Naturales S.A.;890.000.121-6
+150;Alpina;*;*;Alpina Productos Naturales S.A.;890.000.121-6
+151;Alpina;*;*;Alpina Productos Naturales S.A.;890.000.121-6
+152;Freskaleche;*;*;Lácteos Freskaleche S.A.;N/D
+153;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+154;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+155;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+156;Discolacteos;*;*;Discolacteos S.A.;N/D
+157;Freskaleche;*;*;Lácteos Freskaleche S.A.;N/D
+158;Freskaleche;*;*;Lácteos Freskaleche S.A.;N/D
+159;Freskaleche;*;*;Lácteos Freskaleche S.A.;N/D
+160;Freskaleche;*;*;Lácteos Freskaleche S.A.;N/D
+161;Freskaleche;*;*;Lácteos Freskaleche S.A.;N/D
+162;Alqueria;*;*;Industrias Alimenticias Alquería S.A.;890.100.187-1
+163;Alqueria;*;*;Industrias Alimenticias Alquería S.A.;890.100.187-1
+164;Freskaleche;*;*;Lácteos Freskaleche S.A.;N/D
+165;Cremax;*;*;Cremax S.A.S.;N/D
+166;Cremax;*;*;Cremax S.A.S.;N/D
+167;Alqueria;*;*;Industrias Alimenticias Alquería S.A.;890.100.187-1
+168;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+169;Freskaleche;*;*;Lácteos Freskaleche S.A.;N/D
+170;Freskaleche;*;*;Lácteos Freskaleche S.A.;N/D
+171;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+172;Alpina;*;*;Alpina Productos Naturales S.A.;890.000.121-6
+173;Klarens;*;*;Lácteos Klarens S.A.S.;N/D
+174;Alqueria;*;*;Industrias Alimenticias Alquería S.A.;890.100.187-1
+175;Alqueria;*;*;Industrias Alimenticias Alquería S.A.;890.100.187-1
+176;Alpina;*;*;Alpina Productos Naturales S.A.;890.000.121-6
+177;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+178;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+179;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+180;Alpina;*;*;Alpina Productos Naturales S.A.;890.000.121-6
+181;Alqueria;*;*;Industrias Alimenticias Alquería S.A.;890.100.187-1
+182;Alpina;*;*;Alpina Productos Naturales S.A.;890.000.121-6
+183;Alpina;*;*;Alpina Productos Naturales S.A.;890.000.121-6
+184;Bary;*;*;Bary S.A.;890.102.039-8
+185;Alpina;*;*;Alpina Productos Naturales S.A.;890.000.121-6
+186;Comapan;*;*;Comapan S.A.;890.100.150-2
+187;Rosita;*;*;Quesos Rosita S.A.S.;N/D
+188;Frugal;*;*;Frugal S.A.;890.100.135-9
+189;Big Chef;*;*;Big Chef S.A.S.;N/D
+190;Bary;*;*;Bary S.A.;890.102.039-8
+191;Pompeya;*;*;Pompeya S.A.;890.000.481-1
+192;Ideal;*;*;Productos Ideal S.A.;890.900.128-7
+193;Frugal;*;*;Frugal S.A.;890.100.135-9
+194;Pompeya;*;*;Pompeya S.A.;890.000.481-1
+195;Ideal;*;*;Productos Ideal S.A.;890.900.128-7
+196;Bary;*;*;Bary S.A.;890.102.039-8
+197;Bumanguesa;*;*;Lácteos Bumanguesa S.A.;N/D
+198;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+199;Bary;*;*;Bary S.A.;890.102.039-8
+200;Bary;*;*;Bary S.A.;890.102.039-8
+201;Ideal;*;*;Productos Ideal S.A.;890.900.128-7
+202;Bary;*;*;Bary S.A.;890.102.039-8
+203;Comapan;*;*;Comapan S.A.;890.100.150-2
+204;Comapan;*;*;Comapan S.A.;890.100.150-2
+205;Zafran;*;*;Alimentos Zafran S.A.;N/D
+206;Zafran;*;*;Alimentos Zafran S.A.;N/D
+207;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+208;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+209;San Jorge;*;*;Conservas San Jorge S.A.;N/D
+210;Bary;*;*;Bary S.A.;890.102.039-8
+211;Zafran;*;*;Alimentos Zafran S.A.;N/D
+212;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+213;Bary;*;*;Bary S.A.;890.102.039-8
+214;Bary;*;*;Bary S.A.;890.102.039-8
+215;Bary;*;*;Bary S.A.;890.102.039-8
+216;Bary;*;*;Bary S.A.;890.102.039-8
+217;Bary;*;*;Bary S.A.;890.102.039-8
+218;Bary;*;*;Bary S.A.;890.102.039-8
+219;Bary;*;*;Bary S.A.;890.102.039-8
+220;Comapan;*;*;Comapan S.A.;890.100.150-2
+221;Bary;*;*;Bary S.A.;890.102.039-8
+222;Fruco;*;*;Fruco S.A.S.;890.000.776-6
+223;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+224;Fruco;*;*;Fruco S.A.S.;890.000.776-6
+225;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+226;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+227;Fruco;*;*;Fruco S.A.S.;890.000.776-6
+228;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+229;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+230;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+231;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+232;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+233;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+234;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+235;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+236;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+237;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+238;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+239;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+240;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+241;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+242;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+243;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+244;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+245;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+246;Bary;*;*;Bary S.A.;890.102.039-8
+247;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+248;Bary;*;*;Bary S.A.;890.102.039-8
+249;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+250;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+251;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+252;Bary;*;*;Bary S.A.;890.102.039-8
+253;Bary;*;*;Bary S.A.;890.102.039-8
+254;Bary;*;*;Bary S.A.;890.102.039-8
+255;Bary;*;*;Bary S.A.;890.102.039-8
+256;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+257;Zafran;*;*;Alimentos Zafran S.A.;N/D
+258;Bary;*;*;Bary S.A.;890.102.039-8
+259;Bary;*;*;Bary S.A.;890.102.039-8
+260;Bary;*;*;Bary S.A.;890.102.039-8
+261;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+262;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+263;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+264;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+265;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+266;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+267;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+268;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+269;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+270;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+271;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+272;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+273;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+274;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+275;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+276;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+277;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+278;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+279;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+280;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+281;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+282;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+283;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+284;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+285;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+286;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+287;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+288;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+289;Bary;*;*;Bary S.A.;890.102.039-8
+290;Bary;*;*;Bary S.A.;890.102.039-8
+291;Bary;*;*;Bary S.A.;890.102.039-8
+292;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+293;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+294;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+295;Fruco;*;*;Fruco S.A.S.;890.000.776-6
+296;Fruco;*;*;Fruco S.A.S.;890.000.776-6
+297;Fruco;*;*;Fruco S.A.S.;890.000.776-6
+298;Fruco;*;*;Fruco S.A.S.;890.000.776-6
+299;El Rodeo;*;*;El Rodeo S.A.;N/D
+300;Horeca;*;*;Horeca S.A.S.;N/D
+301;Bary;*;*;Bary S.A.;890.102.039-8
+302;Bary;*;*;Bary S.A.;890.102.039-8
+303;Pompeya;*;*;Pompeya S.A.;890.000.481-1
+304;Pompeya;*;*;Pompeya S.A.;890.000.481-1
+305;Thims;*;*;Thims S.A.S.;N/D
+306;Fruco;*;*;Fruco S.A.S.;890.000.776-6
+307;Thims;*;*;Thims S.A.S.;N/D
+308;Pompeya;*;*;Pompeya S.A.;890.000.481-1
+309;Bary;*;*;Bary S.A.;890.102.039-8
+310;Bary;*;*;Bary S.A.;890.102.039-8
+311;Bary;*;*;Bary S.A.;890.102.039-8
+312;Bary;*;*;Bary S.A.;890.102.039-8
+313;Bary;*;*;Bary S.A.;890.102.039-8
+314;Bary;*;*;Bary S.A.;890.102.039-8
+315;Pompeya;*;*;Pompeya S.A.;890.000.481-1
+316;Pompeya;*;*;Pompeya S.A.;890.000.481-1
+317;Pompeya;*;*;Pompeya S.A.;890.000.481-1
+318;Pompeya;*;*;Pompeya S.A.;890.000.481-1
+319;Tomatico;*;*;Conservas Tomatico S.A.;N/D
+320;Practi-pasta;*;*;Practi-pasta S.A.S.;N/D
+321;Practi-pasta;*;*;Practi-pasta S.A.S.;N/D
+322;Practi-pasta;*;*;Practi-pasta S.A.S.;N/D
+323;Practi-pasta;*;*;Practi-pasta S.A.S.;N/D
+324;Practi-pasta;*;*;Practi-pasta S.A.S.;N/D
+325;Practi-pasta;*;*;Practi-pasta S.A.S.;N/D
+326;Practi-pasta;*;*;Practi-pasta S.A.S.;N/D
+327;Mac Pollo;*;*;Mac Pollo S.A.;890.102.052-6
+328;Mac Pollo;*;*;Mac Pollo S.A.;890.102.052-6
+329;Avicampo;*;*;Avicampo S.A.;N/D
+330;Avicampo;*;*;Avicampo S.A.;N/D
+331;Avicampo;*;*;Avicampo S.A.;N/D
+332;Avicampo;*;*;Avicampo S.A.;N/D
+333;Quesada;*;*;Quesos Quesada S.A.S.;N/D
+334;Quesada;*;*;Quesos Quesada S.A.S.;N/D
+335;Quesada;*;*;Quesos Quesada S.A.S.;N/D
+336;Corona;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+337;Girones;*;*;Lácteos Girones S.A.;N/D
+338;Girones;*;*;Lácteos Girones S.A.;N/D
+339;Girones;*;*;Lácteos Girones S.A.;N/D
+340;Corona;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+341;Harina pan;*;*;Alimentos Polar S.A.;890.100.052-9
+342;Harina pan;*;*;Alimentos Polar S.A.;890.100.052-9
+343;Harina pan;*;*;Alimentos Polar S.A.;890.100.052-9
+344;Juan Valdez;*;*;Procafecol S.A.;830.024.420-5
+345;La Sopera;*;*;La Sopera S.A.S.;N/D
+346;La Sopera;*;*;La Sopera S.A.S.;N/D
+347;La Sopera;*;*;La Sopera S.A.S.;N/D
+348;La Sopera;*;*;La Sopera S.A.S.;N/D
+349;La Sopera;*;*;La Sopera S.A.S.;N/D
+350;Suntea;*;*;Suntea S.A.S.;N/D
+351;Suntea;*;*;Suntea S.A.S.;N/D
+352;Suntea;*;*;Suntea S.A.S.;N/D
+353;Suntea;*;*;Suntea S.A.S.;N/D
+354;Suntea;*;*;Suntea S.A.S.;N/D
+355;Suntea;*;*;Suntea S.A.S.;N/D
+356;Suntea;*;*;Suntea S.A.S.;N/D
+357;Suntea;*;*;Suntea S.A.S.;N/D
+358;Frutiño;*;*;Frutiño S.A.;N/D
+359;Frutiño;*;*;Frutiño S.A.;N/D
+360;Frutiño;*;*;Frutiño S.A.;N/D
+361;Frutiño;*;*;Frutiño S.A.;N/D
+362;Frutiño;*;*;Frutiño S.A.;N/D
+363;Frutiño;*;*;Frutiño S.A.;N/D
+364;Frutiño;*;*;Frutiño S.A.;N/D
+365;Frutiño;*;*;Frutiño S.A.;N/D
+366;Frutiño;*;*;Frutiño S.A.;N/D
+367;Frutiño;*;*;Frutiño S.A.;N/D
+368;Frutiño;*;*;Frutiño S.A.;N/D
+369;Boka;*;*;Productos Boka S.A.;N/D
+370;Boka;*;*;Productos Boka S.A.;N/D
+371;Boka;*;*;Productos Boka S.A.;N/D
+372;Boka;*;*;Productos Boka S.A.;N/D
+373;Panelada;*;*;Panelada S.A.;N/D
+374;Corona;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+375;Galilea;*;*;Quesos Galilea S.A.S.;N/D
+376;Diana;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+377;Bucaro;*;*;Bucaro S.A.S.;N/D
+378;La Garza;*;*;La Garza S.A.;N/D
+379;Gourmet;*;*;Gourmet S.A.;N/D
+380;Gourmet;*;*;Gourmet S.A.;N/D
+381;Gourmet;*;*;Gourmet S.A.;N/D
+382;Bucaro;*;*;Bucaro S.A.S.;N/D
+383;Refisal;*;*;Refisal S.A. (Grupo Nutresa);890.100.102-2
+384;Refisal;*;*;Refisal S.A. (Grupo Nutresa);890.100.102-2
+385;Ajinomen;*;*;Ajinomoto Colombia S.A.;890.300.309-8
+386;Ajinomen;*;*;Ajinomoto Colombia S.A.;890.300.309-8
+387;Bary;*;*;Bary S.A.;890.102.039-8
+388;Bary;*;*;Bary S.A.;890.102.039-8
+389;Alamar;*;*;Alamar S.A.S.;N/D
+390;Vancamps;*;*;Van Camp's (Conagra Brands);N/D
+391;Vancamps;*;*;Van Camp's (Conagra Brands);N/D
+392;Selecto;*;*;Selecto S.A.;N/D
+393;Don pancho;*;*;Don Pancho S.A.S.;N/D
+394;Quaker;*;*;PepsiCo Alimentos Colombia S.A.;830.003.584-2
+395;Quaker;*;*;PepsiCo Alimentos Colombia S.A.;830.003.584-2
+396;Doria;*;*;Pastas Doria S.A. (Grupo Nutresa);890.100.142-1
+397;Doria;*;*;Pastas Doria S.A. (Grupo Nutresa);890.100.142-1
+398;Muñeca;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+399;Doria;*;*;Pastas Doria S.A. (Grupo Nutresa);890.100.142-1
+400;Muñeca;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+401;Muñeca;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+402;Diana;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+403;Diana;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+404;Diana;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+405;Diana;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+406;Diana;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+407;Diana;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+408;Diana;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+409;Sello rojo;*;*;Sello Rojo S.A. (Grupo Nutresa);890.900.063-1
+410;Sello rojo;*;*;Sello Rojo S.A. (Grupo Nutresa);890.900.063-1
+411;Sello rojo;*;*;Sello Rojo S.A. (Grupo Nutresa);890.900.063-1
+412;Refisal;*;*;Refisal S.A. (Grupo Nutresa);890.100.102-2
+413;Diana;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+414;Diana;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+415;Nescafe;*;*;Nestlé de Colombia S.A.;860.002.727-2
+416;Diana;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+417;Diana;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+418;Diana;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+419;Maggi;*;*;Nestlé de Colombia S.A.;860.002.727-2
+420;Maggi;*;*;Nestlé de Colombia S.A.;860.002.727-2
+421;Darnel;*;*;Darnel S.A.;800.135.932-9
+422;Bimbo;*;*;Bimbo de Colombia S.A.;860.038.872-2
+423;Bimbo;*;*;Bimbo de Colombia S.A.;860.038.872-2
+424;Klarens;*;*;Lácteos Klarens S.A.S.;N/D
+425;Diana;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+426;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+427;Tia Rosa;*;*;Bimbo de Colombia S.A.;860.038.872-2
+428;Freskaleche;*;*;Lácteos Freskaleche S.A.;N/D
+429;Diana;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+430;Diana;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+431;Sabrina;*;*;Sabrina S.A.;N/D
+432;Rama;*;*;Unilever Andina S.A.;830.025.800-1
+433;Campi;*;*;Campi S.A.;N/D
+434;Claro;*;*;Claro S.A.;N/D
+435;Gustosita;*;*;Gustosita S.A.;N/D
+436;Rama;*;*;Unilever Andina S.A.;830.025.800-1
+437;Origami;*;*;Origami S.A.S.;N/D
+438;Origami;*;*;Origami S.A.S.;N/D
+439;Alpina;*;*;Alpina Productos Naturales S.A.;890.000.121-6
+440;Refisal;*;*;Refisal S.A. (Grupo Nutresa);890.100.102-2
+441;Maggi;*;*;Nestlé de Colombia S.A.;860.002.727-2
+442;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+443;Guadalupe;*;*;Lácteos Guadalupe S.A.;N/D
+444;Soberana;*;*;Grasco S.A.;890.900.149-0
+445;Soberana;*;*;Grasco S.A.;890.900.149-0
+446;Gillette;*;*;Procter & Gamble Colombia S.A.;830.002.678-9
+447;Gillette;*;*;Procter & Gamble Colombia S.A.;830.002.678-9
+448;Gavassa;*;*;Gavassa S.A.;890.100.096-4
+449;Gavassa;*;*;Gavassa S.A.;890.100.096-4
+450;Gavassa;*;*;Gavassa S.A.;890.100.096-4
+451;Gavassa;*;*;Gavassa S.A.;890.100.096-4
+452;Gavassa;*;*;Gavassa S.A.;890.100.096-4
+453;Doria;*;*;Pastas Doria S.A. (Grupo Nutresa);890.100.142-1
+454;Corona;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+455;Doria;*;*;Pastas Doria S.A. (Grupo Nutresa);890.100.142-1
+456;Doria;*;*;Pastas Doria S.A. (Grupo Nutresa);890.100.142-1
+457;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+458;Vikingos;*;*;Vikingos S.A.;N/D
+459;Ocareña;*;*;Ocareña S.A.;N/D
+460;Ariel;*;*;Procter & Gamble Colombia S.A.;830.002.678-9
+461;Ariel;*;*;Procter & Gamble Colombia S.A.;830.002.678-9
+462;Ariel;*;*;Procter & Gamble Colombia S.A.;830.002.678-9
+463;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+464;Zafran;*;*;Alimentos Zafran S.A.;N/D
+465;Sello Rojo;*;*;Sello Rojo S.A. (Grupo Nutresa);890.900.063-1
+466;Tostao;*;*;Tostao S.A.S.;N/D
+467;La Buena;*;*;La Buena S.A.;N/D
+468;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+469;Susanita;*;*;Susanita S.A.S.;N/D
+470;Nescafe;*;*;Nestlé de Colombia S.A.;860.002.727-2
+471;Girones;*;*;Lácteos Girones S.A.;N/D
+472;Diana;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+473;Galilea;*;*;Quesos Galilea S.A.S.;N/D
+474;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+475;Ariel;*;*;Procter & Gamble Colombia S.A.;830.002.678-9
+476;Ariel;*;*;Procter & Gamble Colombia S.A.;830.002.678-9
+477;Maggi;*;*;Nestlé de Colombia S.A.;860.002.727-2
+478;Refisal;*;*;Refisal S.A. (Grupo Nutresa);890.100.102-2
+479;La Abuela;*;*;La Abuela S.A.;N/D
+480;Ramo;*;*;Bimbo de Colombia S.A.;860.038.872-2
+481;Ramo;*;*;Bimbo de Colombia S.A.;860.038.872-2
+482;Comapan;*;*;Comapan S.A.;890.100.150-2
+483;La Fina;*;*;La Fina S.A.;N/D
+484;Harina Pan;*;*;Alimentos Polar S.A.;890.100.052-9
+485;Supremo;*;*;Supremo S.A.;N/D
+486;Ariel;*;*;Procter & Gamble Colombia S.A.;830.002.678-9
+487;Supremo;*;*;Supremo S.A.;N/D
+488;Supremo;*;*;Supremo S.A.;N/D
+489;Darnel;*;*;Darnel S.A.;800.135.932-9
+490;Blancox;*;*;Blancox S.A.;N/D
+491;Blancox;*;*;Blancox S.A.;N/D
+492;Refisal;*;*;Refisal S.A. (Grupo Nutresa);890.100.102-2
+493;Tostao;*;*;Tostao S.A.S.;N/D
+494;Noel;*;*;Compañía Nacional de Galletas Noel S.A. (Grupo Nutresa);890.900.036-0
+495;Bary;*;*;Bary S.A.;890.102.039-8
+496;Manjares;*;*;Manjares S.A.;N/D
+497;Manjares;*;*;Manjares S.A.;N/D
+498;Ocañera;*;*;Ocañera S.A.;N/D
+499;Heinz;*;*;Kraft Heinz Colombia S.A.S.;830.002.991-5
+500;Cocosette;*;*;Cocosette S.A.;N/D
+501;Zenú;*;*;Alimentos Cárnicos S.A. (Grupo Nutresa);890.930.039-3
+502;Bary;*;*;Bary S.A.;890.102.039-8
+503;Gelvez;*;*;Gelvez S.A.;N/D
+504;Soberana;*;*;Grasco S.A.;890.900.149-0
+505;Soberana;*;*;Grasco S.A.;890.900.149-0
+506;La Constancia;*;*;La Constancia S.A.;890.102.051-8
+507;Vancamps;*;*;Van Camp's (Conagra Brands);N/D
+508;Rey;*;*;Rey S.A.;N/D
+509;El Rodeo;*;*;El Rodeo S.A.;N/D
+510;Harina Pan;*;*;Alimentos Polar S.A.;890.100.052-9
+511;Salsan;*;*;Salsan S.A.;890.100.503-1
+512;San José;*;*;San José S.A.;N/D
+513;Doria;*;*;Pastas Doria S.A. (Grupo Nutresa);890.100.142-1
+514;Refisal;*;*;Refisal S.A. (Grupo Nutresa);890.100.102-2
+515;Alpina;*;*;Alpina Productos Naturales S.A.;890.000.121-6
+516;La Victoria;*;*;La Victoria S.A.;N/D
+517;Vancamps;*;*;Van Camp's (Conagra Brands);N/D
+518;Ocañera;*;*;Ocañera S.A.;N/D
+519;Ocañera;*;*;Ocañera S.A.;N/D
+520;Ocañera;*;*;Ocañera S.A.;N/D
+521;Ocañera;*;*;Ocañera S.A.;N/D
+522;Ever House;*;*;Ever House S.A.;N/D
+523;El Sol;*;*;El Sol S.A.;N/D
+524;Nube;*;*;Nube S.A.S.;N/D
+525;Familia;*;*;Productos Familia S.A.;890.900.090-5
+526;Nube;*;*;Nube S.A.S.;N/D
+527;Familia;*;*;Productos Familia S.A.;890.900.090-5
+528;Popular;*;*;Popular S.A.;N/D
+529;Popular;*;*;Popular S.A.;N/D
+530;Darnel;*;*;Darnel S.A.;800.135.932-9
+531;Darnel;*;*;Darnel S.A.;800.135.932-9
+532;Darnel;*;*;Darnel S.A.;800.135.932-9
+533;Darnel;*;*;Darnel S.A.;800.135.932-9
+534;Familia;*;*;Productos Familia S.A.;890.900.090-5
+535;Nube;*;*;Nube S.A.S.;N/D
+536;Nube;*;*;Nube S.A.S.;N/D
+537;Familia;*;*;Productos Familia S.A.;890.900.090-5
+538;Familia;*;*;Productos Familia S.A.;890.900.090-5
+539;Darnel;*;*;Darnel S.A.;800.135.932-9
+540;Darnel;*;*;Darnel S.A.;800.135.932-9
+541;Darnel;*;*;Darnel S.A.;800.135.932-9
+542;Darnel;*;*;Darnel S.A.;800.135.932-9
+543;Darnel;*;*;Darnel S.A.;800.135.932-9
+544;Darnel;*;*;Darnel S.A.;800.135.932-9
+545;Darnel;*;*;Darnel S.A.;800.135.932-9
+546;Darnel;*;*;Darnel S.A.;800.135.932-9
+547;Darnel;*;*;Darnel S.A.;800.135.932-9
+548;Darnel;*;*;Darnel S.A.;800.135.932-9
+549;Darnel;*;*;Darnel S.A.;800.135.932-9
+550;Darnel;*;*;Darnel S.A.;800.135.932-9
+551;Darnel;*;*;Darnel S.A.;800.135.932-9
+552;Darnel;*;*;Darnel S.A.;800.135.932-9
+553;Darnel;*;*;Darnel S.A.;800.135.932-9
+554;Darnel;*;*;Darnel S.A.;800.135.932-9
+555;Darnel;*;*;Darnel S.A.;800.135.932-9
+556;Darnel;*;*;Darnel S.A.;800.135.932-9
+557;Darnel;*;*;Darnel S.A.;800.135.932-9
+558;Darnel;*;*;Darnel S.A.;800.135.932-9
+559;Darnel;*;*;Darnel S.A.;800.135.932-9
+560;Darnel;*;*;Darnel S.A.;800.135.932-9
+561;Darnel;*;*;Darnel S.A.;800.135.932-9
+562;Darnel;*;*;Darnel S.A.;800.135.932-9
+563;Darnel;*;*;Darnel S.A.;800.135.932-9
+564;Darnel;*;*;Darnel S.A.;800.135.932-9
+565;Darnel;*;*;Darnel S.A.;800.135.932-9
+566;Darnel;*;*;Darnel S.A.;800.135.932-9
+567;Darnel;*;*;Darnel S.A.;800.135.932-9
+568;Darnel;*;*;Darnel S.A.;800.135.932-9
+569;Darnel;*;*;Darnel S.A.;800.135.932-9
+570;Darnel;*;*;Darnel S.A.;800.135.932-9
+571;Darnel;*;*;Darnel S.A.;800.135.932-9
+572;Darnel;*;*;Darnel S.A.;800.135.932-9
+573;Darnel;*;*;Darnel S.A.;800.135.932-9
+574;Darnel;*;*;Darnel S.A.;800.135.932-9
+575;Darnel;*;*;Darnel S.A.;800.135.932-9
+576;Darnel;*;*;Darnel S.A.;800.135.932-9
+577;Darnel;*;*;Darnel S.A.;800.135.932-9
+578;Darnel;*;*;Darnel S.A.;800.135.932-9
+579;Darnel;*;*;Darnel S.A.;800.135.932-9
+580;Darnel;*;*;Darnel S.A.;800.135.932-9
+581;Darnel;*;*;Darnel S.A.;800.135.932-9
+582;Darnel;*;*;Darnel S.A.;800.135.932-9
+583;Darnel;*;*;Darnel S.A.;800.135.932-9
+584;Darnel;*;*;Darnel S.A.;800.135.932-9
+585;Darnel;*;*;Darnel S.A.;800.135.932-9
+586;Darnel;*;*;Darnel S.A.;800.135.932-9
+587;Darnel;*;*;Darnel S.A.;800.135.932-9
+588;Darnel;*;*;Darnel S.A.;800.135.932-9
+589;Darnel;*;*;Darnel S.A.;800.135.932-9
+590;El Sol;*;*;El Sol S.A.;N/D
+591;Darnel;*;*;Darnel S.A.;800.135.932-9
+592;Darnel;*;*;Darnel S.A.;800.135.932-9
+593;Darnel;*;*;Darnel S.A.;800.135.932-9
+594;Tork;*;*;Essity Colombia S.A.S.;830.131.824-8
+595;Darnel;*;*;Darnel S.A.;800.135.932-9
+596;Darnel;*;*;Darnel S.A.;800.135.932-9
+597;Darnel;*;*;Darnel S.A.;800.135.932-9
+598;Tork;*;*;Essity Colombia S.A.S.;830.131.824-8
+599;Darnel;*;*;Darnel S.A.;800.135.932-9
+600;Elite;*;*;Elite S.A.;N/D
+601;Familia;*;*;Productos Familia S.A.;890.900.090-5
+602;Familia;*;*;Productos Familia S.A.;890.900.090-5
+603;Familia;*;*;Productos Familia S.A.;890.900.090-5
+604;Popular;*;*;Popular S.A.;N/D
+605;Comapan;*;*;Comapan S.A.;890.100.150-2
+606;Bimbo;*;*;Bimbo de Colombia S.A.;860.038.872-2
+607;Ornelo;*;*;Ornelo S.A.S.;N/D
+608;Ornelo;*;*;Ornelo S.A.S.;N/D
+609;Bimbo;*;*;Bimbo de Colombia S.A.;860.038.872-2
+610;Comapan;*;*;Comapan S.A.;890.100.150-2
+611;Ornelo;*;*;Ornelo S.A.S.;N/D
+612;Ornelo;*;*;Ornelo S.A.S.;N/D
+613;Bimbo;*;*;Bimbo de Colombia S.A.;860.038.872-2
+614;Guadalupe;*;*;Lácteos Guadalupe S.A.;N/D
+615;Guadalupe;*;*;Lácteos Guadalupe S.A.;N/D
+616;Milenio;*;*;Milenio S.A.;N/D
+617;Milenio;*;*;Milenio S.A.;N/D
+618;Del Fonce;*;*;Del Fonce S.A.;N/D
+619;Del Fonce;*;*;Del Fonce S.A.;N/D
+620;Guadalupe;*;*;Lácteos Guadalupe S.A.;N/D
+621;Guadalupe;*;*;Lácteos Guadalupe S.A.;N/D
+622;Noel;*;*;Compañía Nacional de Galletas Noel S.A. (Grupo Nutresa);890.900.036-0
+623;Bimbo;*;*;Bimbo de Colombia S.A.;860.038.872-2
+624;Bimbo;*;*;Bimbo de Colombia S.A.;860.038.872-2
+625;Ornelo;*;*;Ornelo S.A.S.;N/D
+626;Ornelo;*;*;Ornelo S.A.S.;N/D
+627;Ornelo;*;*;Ornelo S.A.S.;N/D
+628;Ornelo;*;*;Ornelo S.A.S.;N/D
+629;Ornelo;*;*;Ornelo S.A.S.;N/D
+630;Bimbo;*;*;Bimbo de Colombia S.A.;860.038.872-2
+631;Bimbo;*;*;Bimbo de Colombia S.A.;860.038.872-2
+632;Paraguitas;*;*;Colombina S.A.;890.900.075-6
+633;Paraguitas;*;*;Colombina S.A.;890.900.075-6
+634;Paraguitas;*;*;Colombina S.A.;890.900.075-6
+635;Alqueria;*;*;Industrias Alimenticias Alquería S.A.;890.100.187-1
+636;Tubito;*;*;Colombina S.A.;890.900.075-6
+637;Tubito;*;*;Colombina S.A.;890.900.075-6
+638;Corona;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+639;Corona;*;*;Alimentos Diana S.A. (Grupo Nutresa);890.100.164-2
+640;Colombina;*;*;Colombina S.A.;890.900.075-6
+641;Colombina;*;*;Colombina S.A.;890.900.075-6
+642;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+643;Nestle;*;*;Nestlé de Colombia S.A.;860.002.727-2
+644;Nestle;*;*;Nestlé de Colombia S.A.;860.002.727-2
+645;Colombina;*;*;Colombina S.A.;890.900.075-6
+646;Colombina;*;*;Colombina S.A.;890.900.075-6
+647;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+648;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+649;Selecto;*;*;Selecto S.A.;N/D
+650;Frutiño;*;*;Frutiño S.A.;N/D
+651;Frutiño;*;*;Frutiño S.A.;N/D
+652;Levapan;*;*;Levapan S.A.;890.100.031-1
+653;Levapan;*;*;Levapan S.A.;890.100.031-1
+654;Levapan;*;*;Levapan S.A.;890.100.031-1
+655;Levapan;*;*;Levapan S.A.;890.100.031-1
+656;Frutiño;*;*;Frutiño S.A.;N/D
+657;Gelada;*;*;Gelada S.A.S.;N/D
+658;Levapan;*;*;Levapan S.A.;890.100.031-1
+659;Selecto;*;*;Selecto S.A.;N/D
+660;Selecto;*;*;Selecto S.A.;N/D
+661;Cordillera;*;*;Cordillera S.A.;N/D
+662;Cordillera;*;*;Cordillera S.A.;N/D
+663;Girones;*;*;Lácteos Girones S.A.;N/D
+664;Girones;*;*;Lácteos Girones S.A.;N/D
+665;Aderezos;*;*;Aderezos S.A.;N/D
+666;Ocañera;*;*;Ocañera S.A.;N/D
+667;Nestle;*;*;Nestlé de Colombia S.A.;860.002.727-2
+668;Nestle;*;*;Nestlé de Colombia S.A.;860.002.727-2
+669;Postobon;*;*;Postobón S.A.;890.900.116-2
+670;Postobon;*;*;Postobón S.A.;890.900.116-2
+671;Postobon;*;*;Postobón S.A.;890.900.116-2
+672;Postobon;*;*;Postobón S.A.;890.900.116-2
+673;Esmeralda;*;*;Compañía Nacional de Chocolates S.A. (Grupo Nutresa);890.900.074-8
+674;Esmeralda;*;*;Compañía Nacional de Chocolates S.A. (Grupo Nutresa);890.900.074-8
+675;Postobon;*;*;Postobón S.A.;890.900.116-2
+676;Postobon;*;*;Postobón S.A.;890.900.116-2
+677;Postobon;*;*;Postobón S.A.;890.900.116-2
+678;Postobon;*;*;Postobón S.A.;890.900.116-2
+679;Postobon;*;*;Postobón S.A.;890.900.116-2
+680;Postobon;*;*;Postobón S.A.;890.900.116-2
+681;Postobon;*;*;Postobón S.A.;890.900.116-2
+682;Postobon;*;*;Postobón S.A.;890.900.116-2
+683;Postobon;*;*;Postobón S.A.;890.900.116-2
+684;Postobon;*;*;Postobón S.A.;890.900.116-2
+685;Postobon;*;*;Postobón S.A.;890.900.116-2
+686;Postobon;*;*;Postobón S.A.;890.900.116-2
+687;Postobon;*;*;Postobón S.A.;890.900.116-2
+688;Postobon;*;*;Postobón S.A.;890.900.116-2
+689;Postobon;*;*;Postobón S.A.;890.900.116-2
+690;Postobon;*;*;Postobón S.A.;890.900.116-2
+691;Postobon;*;*;Postobón S.A.;890.900.116-2
+692;Postobon;*;*;Postobón S.A.;890.900.116-2
+693;Postobon;*;*;Postobón S.A.;890.900.116-2
+694;Postobon;*;*;Postobón S.A.;890.900.116-2
+695;Postobon;*;*;Postobón S.A.;890.900.116-2
+696;Postobon;*;*;Postobón S.A.;890.900.116-2
+697;Postobon;*;*;Postobón S.A.;890.900.116-2
+698;Postobon;*;*;Postobón S.A.;890.900.116-2
+699;Postobon;*;*;Postobón S.A.;890.900.116-2
+700;Postobon;*;*;Postobón S.A.;890.900.116-2
+701;Postobon;*;*;Postobón S.A.;890.900.116-2
+702;Postobon;*;*;Postobón S.A.;890.900.116-2
+703;Postobon;*;*;Postobón S.A.;890.900.116-2
+704;Postobon;*;*;Postobón S.A.;890.900.116-2
+705;Postobon;*;*;Postobón S.A.;890.900.116-2
+706;Postobon;*;*;Postobón S.A.;890.900.116-2
+707;Postobon;*;*;Postobón S.A.;890.900.116-2
+708;Postobon;*;*;Postobón S.A.;890.900.116-2
+709;Postobon;*;*;Postobón S.A.;890.900.116-2
+710;Postobon;*;*;Postobón S.A.;890.900.116-2
+711;Postobon;*;*;Postobón S.A.;890.900.116-2
+712;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+713;Colanta;*;*;Cooperativa Lechera Colanta Ltda.;890.102.042-8
+714;Jumbo;*;*;Cencosud Colombia S.A.;830.082.230-1
+715;Jumbo;*;*;Cencosud Colombia S.A.;830.082.230-1
+716;Jumbo;*;*;Cencosud Colombia S.A.;830.082.230-1
+717;Jumbo;*;*;Cencosud Colombia S.A.;830.082.230-1
+718;Jumbo;*;*;Cencosud Colombia S.A.;830.082.230-1
+719;Jumbo;*;*;Cencosud Colombia S.A.;830.082.230-1
+720;Jumbo;*;*;Cencosud Colombia S.A.;830.082.230-1
+721;Jumbo;*;*;Cencosud Colombia S.A.;830.082.230-1
+722;Jet;*;*;Compañía Nacional de Chocolates S.A. (Grupo Nutresa);890.900.074-8
+723;Jet;*;*;Compañía Nacional de Chocolates S.A. (Grupo Nutresa);890.900.074-8
+724;Jet;*;*;Compañía Nacional de Chocolates S.A. (Grupo Nutresa);890.900.074-8
+725;Jet;*;*;Compañía Nacional de Chocolates S.A. (Grupo Nutresa);890.900.074-8
+726;Jet;*;*;Compañía Nacional de Chocolates S.A. (Grupo Nutresa);890.900.074-8
+727;Italo;*;*;Italo S.A.;N/D
+728;Jet;*;*;Compañía Nacional de Chocolates S.A. (Grupo Nutresa);890.900.074-8
+729;Jet;*;*;Compañía Nacional de Chocolates S.A. (Grupo Nutresa);890.900.074-8
+730;Colombina;*;*;Colombina S.A.;890.900.075-6
+731;Colombina;*;*;Colombina S.A.;890.900.075-6
+732;Colombina;*;*;Colombina S.A.;890.900.075-6
+733;Colombina;*;*;Colombina S.A.;890.900.075-6
+734;Colombina;*;*;Colombina S.A.;890.900.075-6
+735;Colombina;*;*;Colombina S.A.;890.900.075-6
+736;Colombina;*;*;Colombina S.A.;890.900.075-6
+737;Colombina;*;*;Colombina S.A.;890.900.075-6
+738;Colombina;*;*;Colombina S.A.;890.900.075-6
+739;Tosh;*;*;Compañía Nacional de Galletas Noel S.A. (Grupo Nutresa);890.900.036-0
+740;Tosh;*;*;Compañía Nacional de Galletas Noel S.A. (Grupo Nutresa);890.900.036-0
+741;Margarita;*;*;PepsiCo Alimentos Colombia S.A.;830.003.584-2
+742;Margarita;*;*;PepsiCo Alimentos Colombia S.A.;830.003.584-2
+743;Margarita;*;*;PepsiCo Alimentos Colombia S.A.;830.003.584-2
+744;Margarita;*;*;PepsiCo Alimentos Colombia S.A.;830.003.584-2
+745;Margarita;*;*;PepsiCo Alimentos Colombia S.A.;830.003.584-2
+746;Margarita;*;*;PepsiCo Alimentos Colombia S.A.;830.003.584-2
+747;Margarita;*;*;PepsiCo Alimentos Colombia S.A.;830.003.584-2
+748;Margarita;*;*;PepsiCo Alimentos Colombia S.A.;830.003.584-2
+749;Margarita;*;*;PepsiCo Alimentos Colombia S.A.;830.003.584-2
+750;Bimbo;*;*;Bimbo de Colombia S.A.;860.038.872-2
+751;Bimbo;*;*;Bimbo de Colombia S.A.;860.038.872-2
+752;Ramo;*;*;Bimbo de Colombia S.A.;860.038.872-2
+753;Bimbo;*;*;Bimbo de Colombia S.A.;860.038.872-2
+754;Ramo;*;*;Bimbo de Colombia S.A.;860.038.872-2
+755;Bimbo;*;*;Bimbo de Colombia S.A.;860.038.872-2
+756;Bimbo;*;*;Bimbo de Colombia S.A.;860.038.872-2
+757;Colombina;*;*;Colombina S.A.;890.900.075-6
+758;Oreo;*;*;Mondelēz Colombia S.A.S.;860.052.021-2
+759;Oreo;*;*;Mondelēz Colombia S.A.S.;860.052.021-2
+760;Oreo;*;*;Mondelēz Colombia S.A.S.;860.052.021-2
+761;Cocosette;*;*;Cocosette S.A.;N/D
+762;Trident;*;*;Mondelēz Colombia S.A.S.;860.052.021-2
+763;Trident;*;*;Mondelēz Colombia S.A.S.;860.052.021-2
+764;Trident;*;*;Mondelēz Colombia S.A.S.;860.052.021-2
+765;Trident;*;*;Mondelēz Colombia S.A.S.;860.052.021-2
+766;Colombina;*;*;Colombina S.A.;890.900.075-6
+767;Bimbo;*;*;Bimbo de Colombia S.A.;860.038.872-2
+768;Ramo;*;*;Bimbo de Colombia S.A.;860.038.872-2
