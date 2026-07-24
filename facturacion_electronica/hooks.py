@@ -87,4 +87,8 @@ doctype_js = {
 	"POS Closing Entry": "public/js/pos_closing_entry.js",
 }
 
+page_js = {
+	"point-of-sale": "public/js/pos_custom.js",
+}
+
 app_include_js = ["public/js/desktop_redirect.js"]
