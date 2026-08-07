@@ -1,3 +1,49 @@
+// Hide "Reset Desktop Layout" button for non-admin users
+(function () {
+	function hide_reset_button() {
+		if (!frappe.boot || !frappe.session) return;
+		if (frappe.session.user === "Administrator" || frappe.user.has_role("System Manager")) return;
+
+		// Override the desktop page setup to remove the reset button
+		var orig_get_dropup_items = null;
+		if (frappe.pages && frappe.pages.desktop && frappe.pages.desktop.page) {
+			return; // already loaded, try DOM approach
+		}
+
+		// DOM-based approach: observe and remove the button when it appears
+		var observer = new MutationObserver(function (mutations) {
+			var items = document.querySelectorAll('.user-action-dropup .dropdown-item, .dropup .dropdown-item');
+			items.forEach(function (el) {
+				if (el.textContent.trim() === "Reset Desktop Layout" ||
+				    el.textContent.trim() === "Restablecer el diseño del escritorio" ||
+				    el.textContent.trim().indexOf("Reset Desktop") !== -1) {
+					el.style.display = "none";
+				}
+			});
+		});
+		observer.observe(document.body, { childList: true, subtree: true });
+
+		// Also check periodically for the first few seconds
+		var attempts = 0;
+		var interval = setInterval(function () {
+			var items = document.querySelectorAll('.dropdown-item');
+			items.forEach(function (el) {
+				if (el.textContent.trim() === "Reset Desktop Layout" ||
+				    el.textContent.trim() === "Restablecer el diseño del escritorio" ||
+				    el.textContent.trim().indexOf("Reset Desktop") !== -1) {
+					el.style.display = "none";
+				}
+			});
+			attempts++;
+			if (attempts > 20) clearInterval(interval);
+		}, 500);
+	}
+
+	$(document).ready(function () {
+		setTimeout(hide_reset_button, 500);
+	});
+})();
+
 // Redirect cajera and admin to /desk/desktop on first page load after login
 (function () {
 	function check_and_redirect() {
