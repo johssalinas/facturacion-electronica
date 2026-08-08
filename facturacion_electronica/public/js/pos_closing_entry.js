@@ -2,6 +2,10 @@ function fe_cerrar_actualizar(frm) {
 	if (frm.doc.docstatus !== 0) {
 		return;
 	}
+	// Don't call the endpoint on new (unsaved) documents
+	if (frm.is_new()) {
+		return;
+	}
 	frappe.call({
 		method: "facturacion_electronica.events.pos_closing_entry.get_pendientes_fe",
 		args: { name: frm.doc.name },
