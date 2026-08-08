@@ -1,10 +1,8 @@
 import frappe
 from frappe import _
 from frappe.query_builder import DocType
-from frappe.query_builder.functions import Sum
-from pypika.terms import Timestamp
-from pypika.queries import Column as ConstantColumn
-from pypika import functions as fn
+from frappe.query_builder import functions as fn
+from frappe.query_builder.custom import ConstantColumn
 from erpnext.accounts.doctype.pos_closing_entry.pos_closing_entry import POSClosingEntry
 
 
