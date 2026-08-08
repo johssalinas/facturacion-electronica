@@ -321,3 +321,138 @@ frappe.require("point-of-sale.bundle.js", function () {
 	// Start observing once the POS page is ready
 	setTimeout(setup_cart_observer, 1000);
 });
+
+
+// =============================================================================
+// 7. BOTON "PAGAR" en pedidos recientes para facturas pendientes de pago
+// Reemplaza "Email Receipt" por "Pagar" cuando la factura está pendiente
+// =============================================================================
+
+frappe.require("point-of-sale.bundle.js", function () {
+	if (!erpnext.PointOfSale || !erpnext.PointOfSale.PastOrderSummary) return;
+
+	var PastOrderSummary = erpnext.PointOfSale.PastOrderSummary;
+
+	// Override get_condition_btn_map to add "Pagar" button
+	var original_get_map = PastOrderSummary.prototype.get_condition_btn_map;
+	PastOrderSummary.prototype.get_condition_btn_map = function (after_submission) {
+		if (after_submission) {
+			return [{ condition: true, visible_btns: ["Print Receipt", "Email Receipt", "New Order"] }];
+		}
+
+		return [
+			{ condition: this.doc.docstatus === 0, visible_btns: ["Edit Order", "Delete Order"] },
+			{
+				condition: ["Partly Paid", "Overdue", "Unpaid"].includes(this.doc.status),
+				visible_btns: ["Print Receipt", "Pagar", "Open in Form View"],
+			},
+			{
+				condition:
+					!this.doc.is_return &&
+					this.doc.docstatus === 1 &&
+					!["Partly Paid", "Overdue", "Unpaid"].includes(this.doc.status),
+				visible_btns: ["Print Receipt", "Email Receipt", "Return"],
+			},
+			{
+				condition: this.doc.is_return && this.doc.docstatus === 1,
+				visible_btns: ["Print Receipt", "Email Receipt"],
+			},
+		];
+	};
+
+	// Override bind_events to add "Pagar" button handler
+	var original_bind = PastOrderSummary.prototype.bind_events;
+	PastOrderSummary.prototype.bind_events = function () {
+		original_bind.call(this);
+		var me = this;
+
+		this.$summary_container.on("click", ".pagar-btn", function () {
+			if (!me.doc) return;
+
+			var outstanding = me.doc.outstanding_amount || me.doc.grand_total;
+			var doctype = me.doc.doctype;
+			var docname = me.doc.name;
+
+			// Create Payment Entry dialog directly in POS
+			var d = new frappe.ui.Dialog({
+				title: __("Registrar Pago") + " - " + docname,
+				fields: [
+					{
+						fieldname: "mode_of_payment",
+						fieldtype: "Link",
+						options: "Mode of Payment",
+						label: __("Modo de Pago"),
+						reqd: 1,
+						default: "Efectivo",
+					},
+					{
+						fieldname: "amount",
+						fieldtype: "Currency",
+						label: __("Monto a Pagar"),
+						reqd: 1,
+						default: outstanding,
+						description: __("Pendiente: ") + format_currency(outstanding, me.doc.currency),
+					},
+					{
+						fieldname: "reference_date",
+						fieldtype: "Date",
+						label: __("Fecha"),
+						default: frappe.datetime.get_today(),
+						reqd: 1,
+					},
+				],
+				primary_action_label: __("Pagar"),
+				primary_action: function (values) {
+					frappe.call({
+						method: "erpnext.accounts.doctype.payment_entry.payment_entry.get_payment_entry",
+						args: {
+							dt: doctype,
+							dn: docname,
+							party_amount: values.amount,
+						},
+						freeze: true,
+						freeze_message: __("Creando pago..."),
+						callback: function (r) {
+							if (r.message) {
+								var pe = r.message;
+								pe.mode_of_payment = values.mode_of_payment;
+								pe.reference_date = values.reference_date;
+								pe.paid_amount = values.amount;
+								pe.received_amount = values.amount;
+
+								// Save and submit the payment entry
+								frappe.call({
+									method: "frappe.client.save",
+									args: { doc: pe },
+									freeze: true,
+									callback: function (save_r) {
+										if (save_r.message) {
+											frappe.call({
+												method: "frappe.client.submit",
+												args: { doc: save_r.message },
+												freeze: true,
+												callback: function (submit_r) {
+													if (submit_r.message) {
+														d.hide();
+														frappe.show_alert({
+															message: __("Pago registrado: {0}", [submit_r.message.name]),
+															indicator: "green",
+														}, 5);
+														frappe.utils.play_sound("submit");
+														// Reload the order summary
+														me.load_summary_of(me.doc);
+													}
+												},
+											});
+										}
+									},
+								});
+							}
+						},
+					});
+				},
+			});
+			d.show();
+		});
+	};
+});
