@@ -259,8 +259,15 @@ frappe.require("point-of-sale.bundle.js", function () {
 					var item_row = frm.doc.items.find(function (i) { return i.name === row_name; });
 					if (!item_row) return;
 
-					// Use the controller's on_cart_update which handles stock checks, etc.
-					window.cur_pos.on_cart_update({ field: "qty", value: new_qty, item: { name: row_name } });
+					// Directly set the value in the model and update the cart
+					frappe.model.set_value(item_row.doctype, item_row.name, "qty", new_qty)
+						.then(function () {
+							// Refresh item_row reference after set_value
+							item_row = frm.doc.items.find(function (i) { return i.name === row_name; });
+							if (item_row) {
+								window.cur_pos.update_cart_html(item_row);
+							}
+						});
 				}, 400);
 			});
 
@@ -295,6 +302,15 @@ frappe.require("point-of-sale.bundle.js", function () {
 			// Prevent click on input/delete from triggering cart_item_clicked (opening details panel)
 			this.$cart_items_wrapper.on("click", ".inline-qty-input, .inline-delete-btn", function (e) {
 				e.stopPropagation();
+			});
+
+			// Prevent clicking cart items from opening the item details panel
+			// The user wants a fast flow without the side panel
+			this.$cart_items_wrapper.on("click", ".cart-item-wrapper", function (e) {
+				// Only allow the default behavior if clicking on item-name (for those who need details)
+				if (!$(e.target).closest(".item-name").length) {
+					e.stopImmediatePropagation();
+				}
 			});
 
 			// Select all text on focus for quick typing
