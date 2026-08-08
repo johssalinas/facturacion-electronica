@@ -61,7 +61,7 @@ class CustomPOSClosingEntry(POSClosingEntry):
 
 		frappe.throw(error_list, title=_("Invalid POS Invoices"), as_list=True)
 
-	def validate_pos_sales_invoices(self):
+	def validate_sales_invoices(self):
 		"""Validate Sales Invoices without checking owner."""
 		invalid_rows = []
 
@@ -70,7 +70,7 @@ class CustomPOSClosingEntry(POSClosingEntry):
 			sales_invoice = frappe.db.get_values(
 				"Sales Invoice",
 				d.sales_invoice,
-				["consolidated_invoice", "pos_profile", "docstatus", "owner"],
+				["pos_profile", "docstatus", "owner", "is_pos", "is_created_using_pos", "pos_closing_entry"],
 				as_dict=1,
 			)
 
@@ -81,10 +81,16 @@ class CustomPOSClosingEntry(POSClosingEntry):
 
 			sales_invoice = sales_invoice[0]
 
-			if sales_invoice.consolidated_invoice:
+			if sales_invoice.pos_closing_entry:
 				invalid_row.setdefault("msg", []).append(_("Sales Invoice is already consolidated"))
 				invalid_rows.append(invalid_row)
 				continue
+
+			if sales_invoice.is_pos == 0:
+				invalid_row.setdefault("msg", []).append(_("Sales Invoice does not have Payments"))
+
+			if sales_invoice.is_created_using_pos == 0:
+				invalid_row.setdefault("msg", []).append(_("Sales Invoice is not created using POS"))
 
 			if sales_invoice.pos_profile != self.pos_profile:
 				invalid_row.setdefault("msg", []).append(
