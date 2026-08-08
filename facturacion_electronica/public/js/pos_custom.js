@@ -164,7 +164,7 @@ frappe.require("point-of-sale.bundle.js", function () {
 					display: flex;
 					align-items: center;
 					gap: 4px;
-					min-width: 100px;
+					min-width: 90px;
 				}
 				.cart-item-wrapper .inline-qty-input {
 					width: 50px;
@@ -185,21 +185,21 @@ frappe.require("point-of-sale.bundle.js", function () {
 				.cart-item-wrapper .inline-delete-btn {
 					cursor: pointer;
 					color: var(--red-500);
-					font-size: 16px;
+					font-size: 18px;
 					font-weight: bold;
 					padding: 0 6px;
 					line-height: 1;
 					border-radius: 4px;
 					opacity: 0.7;
+					flex-shrink: 0;
 				}
 				.cart-item-wrapper .inline-delete-btn:hover {
 					opacity: 1;
 					background: var(--red-50);
 				}
-				.cart-item-wrapper .item-qty-rate {
-					display: flex;
-					align-items: center;
-					gap: 8px;
+				.cart-item-wrapper .item-name-desc {
+					flex: 1;
+					min-width: 0;
 				}
 			</style>
 		`;
@@ -221,13 +221,17 @@ frappe.require("point-of-sale.bundle.js", function () {
 			var qty = item_data.qty || 0;
 			var row_name = $item.attr("data-row-name");
 
-			// Replace qty text with input + delete button
+			// Replace qty text with input (delete button will be prepended to the row)
 			$qty_div.html(
 				'<div class="inline-cart-controls">' +
-					'<span class="inline-delete-btn" data-row="' + row_name + '" title="Eliminar">&times;</span>' +
-					'<input type="number" class="inline-qty-input" data-row="' + row_name + '" value="' + qty + '" min="0" step="1">' +
+					'<input type="number" class="inline-qty-input" data-row="' + row_name + '" value="' + qty + '" min="1" step="1">' +
 				'</div>'
 			);
+
+			// Add delete button at the beginning of the cart item (before image/name)
+			if (!$item.find(".inline-delete-btn").length) {
+				$item.prepend('<span class="inline-delete-btn" data-row="' + row_name + '" title="Eliminar">&times;</span>');
+			}
 		};
 
 		// Override make_cart_items_section to add event handlers for inline controls
@@ -235,46 +239,57 @@ frappe.require("point-of-sale.bundle.js", function () {
 		ItemCart.prototype.make_cart_items_section = function () {
 			original_make.call(this);
 			var me = this;
+			var qty_change_timeout = null;
 
-			// Handle qty input change
-			this.$cart_items_wrapper.on("change", ".inline-qty-input", function (e) {
+			// Handle qty input change (both typing and arrow clicks)
+			this.$cart_items_wrapper.on("input", ".inline-qty-input", function (e) {
 				e.stopPropagation();
-				var row_name = $(this).data("row");
-				var new_qty = flt($(this).val());
-				var frm = me.events.get_frm();
+				var $input = $(this);
+				var row_name = $input.data("row");
+				var new_qty = flt($input.val());
 
-				if (new_qty <= 0) {
-					// Remove item
-					frappe.model.set_value("POS Invoice Item", row_name, "qty", 0).then(function () {
-						frappe.model.clear_doc("POS Invoice Item", row_name);
-						var item_row = frm.doc.items.find(function (i) { return i.name === row_name; });
-						if (window.cur_pos) {
-							window.cur_pos.update_cart_html(item_row || { name: row_name }, true);
-						}
-					});
-				} else {
-					frappe.model.set_value("POS Invoice Item", row_name, "qty", new_qty).then(function () {
-						var item_row = frm.doc.items.find(function (i) { return i.name === row_name; });
-						if (window.cur_pos && item_row) {
-							window.cur_pos.update_cart_html(item_row);
-						}
-					});
-				}
+				// Debounce to avoid too many updates while typing
+				clearTimeout(qty_change_timeout);
+				qty_change_timeout = setTimeout(function () {
+					if (new_qty <= 0) new_qty = 1;
+					$input.val(new_qty);
+
+					if (!window.cur_pos) return;
+					var frm = window.cur_pos.frm;
+					var item_row = frm.doc.items.find(function (i) { return i.name === row_name; });
+					if (!item_row) return;
+
+					// Use the controller's on_cart_update which handles stock checks, etc.
+					window.cur_pos.on_cart_update({ field: "qty", value: new_qty, item: { name: row_name } });
+				}, 400);
 			});
 
-			// Handle delete button click
+			// Handle delete button click - use the same approach as the original remove
 			this.$cart_items_wrapper.on("click", ".inline-delete-btn", function (e) {
 				e.stopPropagation();
 				var row_name = $(this).data("row");
-				var frm = me.events.get_frm();
 
-				frappe.model.set_value("POS Invoice Item", row_name, "qty", 0).then(function () {
-					frappe.model.clear_doc("POS Invoice Item", row_name);
-					var item_row = frm.doc.items.find(function (i) { return i.name === row_name; });
-					if (window.cur_pos) {
-						window.cur_pos.update_cart_html(item_row || { name: row_name }, true);
-					}
-				});
+				if (!window.cur_pos) return;
+				var frm = window.cur_pos.frm;
+				var item_row = frm.doc.items.find(function (i) { return i.name === row_name; });
+				if (!item_row) return;
+
+				// Replicate the original remove_item_from_cart logic
+				frappe.dom.freeze();
+				frappe.model.set_value(item_row.doctype, item_row.name, "qty", 0)
+					.then(function () {
+						frappe.model.clear_doc(item_row.doctype, item_row.name);
+						window.cur_pos.update_cart_html(item_row, true);
+						// Close item details panel if open
+						if (window.cur_pos.item_details) {
+							window.cur_pos.item_details.toggle_item_details_section(null);
+						}
+						frappe.dom.unfreeze();
+					})
+					.catch(function (err) {
+						console.log(err);
+						frappe.dom.unfreeze();
+					});
 			});
 
 			// Prevent click on input/delete from triggering cart_item_clicked (opening details panel)
