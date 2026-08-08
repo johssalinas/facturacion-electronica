@@ -1,4 +1,4 @@
-// POS customizations: barcode search + auto-focus on search input
+// POS customizations: barcode search + auto-focus + inline cart editing
 // Loaded via page_js hook on the "point-of-sale" page
 
 frappe.require("point-of-sale.bundle.js", function () {
@@ -148,6 +148,144 @@ frappe.require("point-of-sale.bundle.js", function () {
 					}
 				}, 200);
 			}
+		};
+	}
+
+	// ===================================================================
+	// 6. INLINE CART EDITING: qty input + delete button directly in cart
+	// ===================================================================
+	if (erpnext.PointOfSale.ItemCart) {
+		var ItemCart = erpnext.PointOfSale.ItemCart;
+
+		// Inject CSS for inline cart controls
+		var cart_css = `
+			<style>
+				.cart-item-wrapper .inline-cart-controls {
+					display: flex;
+					align-items: center;
+					gap: 4px;
+					min-width: 100px;
+				}
+				.cart-item-wrapper .inline-qty-input {
+					width: 50px;
+					text-align: center;
+					border: 1px solid var(--border-color);
+					border-radius: 4px;
+					padding: 2px 4px;
+					font-size: 13px;
+					font-weight: bold;
+					background: var(--control-bg);
+					color: var(--text-color);
+				}
+				.cart-item-wrapper .inline-qty-input:focus {
+					border-color: var(--primary);
+					outline: none;
+					box-shadow: 0 0 0 1px var(--primary);
+				}
+				.cart-item-wrapper .inline-delete-btn {
+					cursor: pointer;
+					color: var(--red-500);
+					font-size: 16px;
+					font-weight: bold;
+					padding: 0 6px;
+					line-height: 1;
+					border-radius: 4px;
+					opacity: 0.7;
+				}
+				.cart-item-wrapper .inline-delete-btn:hover {
+					opacity: 1;
+					background: var(--red-50);
+				}
+				.cart-item-wrapper .item-qty-rate {
+					display: flex;
+					align-items: center;
+					gap: 8px;
+				}
+			</style>
+		`;
+		$("head").append(cart_css);
+
+		// Override render_cart_item to add inline controls
+		var original_render = ItemCart.prototype.render_cart_item;
+		ItemCart.prototype.render_cart_item = function (item_data, $item_to_update) {
+			// Call original render first
+			original_render.call(this, item_data, $item_to_update);
+
+			// Now replace the qty display with an inline input + delete button
+			var $item = $item_to_update.length ? $item_to_update : this.get_cart_item(item_data);
+			if (!$item || !$item.length) return;
+
+			var $qty_div = $item.find(".item-qty");
+			if (!$qty_div.length) return;
+
+			var qty = item_data.qty || 0;
+			var row_name = $item.attr("data-row-name");
+
+			// Replace qty text with input + delete button
+			$qty_div.html(
+				'<div class="inline-cart-controls">' +
+					'<span class="inline-delete-btn" data-row="' + row_name + '" title="Eliminar">&times;</span>' +
+					'<input type="number" class="inline-qty-input" data-row="' + row_name + '" value="' + qty + '" min="0" step="1">' +
+				'</div>'
+			);
+		};
+
+		// Override make_cart_items_section to add event handlers for inline controls
+		var original_make = ItemCart.prototype.make_cart_items_section;
+		ItemCart.prototype.make_cart_items_section = function () {
+			original_make.call(this);
+			var me = this;
+
+			// Handle qty input change
+			this.$cart_items_wrapper.on("change", ".inline-qty-input", function (e) {
+				e.stopPropagation();
+				var row_name = $(this).data("row");
+				var new_qty = flt($(this).val());
+				var frm = me.events.get_frm();
+
+				if (new_qty <= 0) {
+					// Remove item
+					frappe.model.set_value("POS Invoice Item", row_name, "qty", 0).then(function () {
+						frappe.model.clear_doc("POS Invoice Item", row_name);
+						var item_row = frm.doc.items.find(function (i) { return i.name === row_name; });
+						if (window.cur_pos) {
+							window.cur_pos.update_cart_html(item_row || { name: row_name }, true);
+						}
+					});
+				} else {
+					frappe.model.set_value("POS Invoice Item", row_name, "qty", new_qty).then(function () {
+						var item_row = frm.doc.items.find(function (i) { return i.name === row_name; });
+						if (window.cur_pos && item_row) {
+							window.cur_pos.update_cart_html(item_row);
+						}
+					});
+				}
+			});
+
+			// Handle delete button click
+			this.$cart_items_wrapper.on("click", ".inline-delete-btn", function (e) {
+				e.stopPropagation();
+				var row_name = $(this).data("row");
+				var frm = me.events.get_frm();
+
+				frappe.model.set_value("POS Invoice Item", row_name, "qty", 0).then(function () {
+					frappe.model.clear_doc("POS Invoice Item", row_name);
+					var item_row = frm.doc.items.find(function (i) { return i.name === row_name; });
+					if (window.cur_pos) {
+						window.cur_pos.update_cart_html(item_row || { name: row_name }, true);
+					}
+				});
+			});
+
+			// Prevent click on input/delete from triggering cart_item_clicked (opening details panel)
+			this.$cart_items_wrapper.on("click", ".inline-qty-input, .inline-delete-btn", function (e) {
+				e.stopPropagation();
+			});
+
+			// Select all text on focus for quick typing
+			this.$cart_items_wrapper.on("focus", ".inline-qty-input", function () {
+				$(this).select();
+			});
 		};
 	}
 });
