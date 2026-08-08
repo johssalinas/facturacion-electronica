@@ -1,0 +1,555 @@
+# Salsamentaria Multiespecial — Documentación Completa del Proyecto
+
+## 1. Credenciales y Accesos
+
+### 1.1 Servidor Hetzner (SSH)
+- **IP:** 46.225.227.129
+- **Usuario:** root
+- **SSH Key:** `~/.ssh/id_ed25519_hetzner`
+- **Comando de conexión:**
+  ```bash
+  ssh -i ~/.ssh/id_ed25519_hetzner root@46.225.227.129
+  ```
+
+### 1.2 Coolify
+- **URL:** http://46.225.227.129:8000 (accesible desde el navegador)
+- **API Token:** `2|WCIlYtdQc0gq8TexAtkPRmWZX6lYc0GwDJlBG3Nl89ba61fd`
+- **Application UUID:** `vvekd3jmyymltrmfoi8vdbdu`
+- **Deploy via API:**
+  ```bash
+  # Cambiar variable de entorno
+  curl -X PATCH -H "Authorization: Bearer 2|WCIlYtdQc0gq8TexAtkPRmWZX6lYc0GwDJlBG3Nl89ba61fd" \
+    -H "Content-Type: application/json" \
+    -d '{"key":"FRAPPE_VERSION","value":"v16.25.0","is_buildtime":true,"is_preview":false}' \
+    "http://localhost:8000/api/v1/applications/vvekd3jmyymltrmfoi8vdbdu/envs"
+
+  # Disparar redeploy
+  curl -X POST -H "Authorization: Bearer 2|WCIlYtdQc0gq8TexAtkPRmWZX6lYc0GwDJlBG3Nl89ba61fd" \
+    "http://localhost:8000/api/v1/applications/vvekd3jmyymltrmfoi8vdbdu/start"
+  ```
+
+### 1.3 ERPNext — Usuarios y Contraseñas
+| Rol | Email | Contraseña | Descripción |
+|---|---|---|---|
+| Superadmin | johssalinas2work@gmail.com | F..b3QwfYk | Acceso total, todos los roles |
+| Contadora | andrea@gmail.com | Andrea.123456 | Contabilidad, inventario, compras, ventas, FE |
+| Admin tienda | lorena@gmail.com | Lorena.123456 | Ventas, compras, almacén, reportes, POS |
+| Cajera | sharith@gmail.com | Sharith.123456 | Solo vender desde POS |
+
+### 1.4 URL del sitio
+- **Producción:** https://salsamentariamultiespecial.duckdns.org
+- **Login:** POST a `/api/method/login` con `usr` y `pwd`
+
+### 1.5 GitHub
+- **Repo app FE:** https://github.com/johssalinas/facturacion-electronica
+- **Remote SSH:** `git@github.com-personal:johssalinas/facturacion-electronica.git`
+- **Repo deploy (compose):** https://github.com/johssalinas/salsamentaria-multiespecial (privado, gestión via Coolify)
+- **Branch:** master
+
+### 1.6 Factus API (Facturación Electrónica)
+- **Ambiente actual:** Sandbox
+- **URL Sandbox:** https://api-sandbox.factus.com.co
+- **URL Producción:** https://api.factus.com.co
+- **Dueño Fiscal:** "Lorena" (NIT: 1098769003)
+- **Estado credenciales:** INCOMPLETAS — falta client_id, client_secret, username, password, numbering_range_id
+
+### 1.7 Base de datos MariaDB
+- **Root password:** I3CcGBT7iS36t^AK
+- **Admin password ERPNext:** 9B6DOOv@LYwRg*#6
+- **Host:** db container (docker network)
+- **Database:** salsamentariamultiespecial_duckdns_org
+
+---
+
+## 2. Arquitectura del Proyecto
+
+### 2.1 Visión General
+ERPNext 16.25.0 (Frappe 16.24.0) desplegado con Coolify 4.1.2 sobre un servidor Hetzner. Se utiliza una **imagen Docker custom** (`erpnext-fe:v16.25.0`) que incluye la app `facturacion_electronica` horneada, para que sobreviva a redeploys sin necesidad de reinstalación manual.
+
+### 2.2 Stack Tecnológico
+| Componente | Versión | Propósito |
+|---|---|---|
+| Frappe Framework | 16.24.0 | Framework base |
+| ERPNext | 16.25.0 | ERP |
+| MariaDB | 11.8 | Base de datos |
+| Redis | 6.2-alpine | Cache, queue, socketio |
+| Coolify | 4.1.2 | Orquestador/Deploy |
+| Traefik | v3.6 | Reverse proxy + TLS |
+| Docker | 29.5.3 | Container runtime |
+| Node.js | v24.12.0 | Build de assets (nvm) |
+| Python | 3.14 | Runtime frappe |
+
+### 2.3 Contenedores (12 servicios ERPNext + 6 Coolify)
+**ERPNext (prefijo `vvekd3jmyymltrmfoi8vdbdu`):**
+- `backend` — Gunicorn, sirve la API
+- `frontend` — Nginx, sirve assets y proxy al backend
+- `configurator` — Configura el site al arrancar
+- `scheduler` — Cron de Frappe
+- `queue-default` — Worker cola default
+- `queue-short` — Worker cola short
+- `queue-long` — Worker cola long
+- `websocket` — Socket.io
+- `db` — MariaDB 11.8
+- `redis-cache` — Cache
+- `redis-queue` — Queue
+- `redis-socketio` — Socketio
+
+**Coolify:**
+- `coolify` — Panel principal
+- `coolify-db` — PostgreSQL (DB de Coolify)
+- `coolify-redis` — Redis de Coolify
+- `coolify-proxy` — Traefik v3.6
+- `coolify-sentinel` — Monitoreo
+- `coolify-realtime` — Websockets de Coolify
+
+### 2.4 Volúmenes Docker Persistentes
+| Volumen | Contenido | Sobrevive redeploy |
+|---|---|---|
+| `vvekd3jmyymltrmfoi8vdbdu_sites` | Sitios, DB config, assets compilados, uploads | **SÍ** |
+| `vvekd3jmyymltrmfoi8vdbdu_logs` | Logs de Frappe | **SÍ** |
+| `vvekd3jmyymltrmfoi8vdbdu_db-data` | Datos MariaDB | **SÍ** |
+| `vvekd3jmyymltrmfoi8vdbdu_redis-*` | Datos Redis | **SÍ** |
+
+> **IMPORTANTE:** El directorio `apps/` NO está en un volumen. Está dentro de la imagen Docker. Por eso se usa una imagen custom con la app horneada.
+
+### 2.5 Dockerfile Custom
+**Ubicación en el servidor:** `/root/fe-image/Dockerfile`
+**Ubicación del script compile_po.py:** `/root/fe-image/compile_po.py`
+
+```dockerfile
+FROM frappe/erpnext:v16.25.0
+USER frappe
+WORKDIR /home/frappe/frappe-bench
+COPY --chown=frappe:frappe compile_po.py /tmp/compile_po.py
+RUN rm -rf apps/facturacion_electronica \
+    && git clone --depth 1 https://github.com/johssalinas/facturacion-electronica apps/facturacion_electronica \
+    && env/bin/pip install --no-cache-dir -e apps/facturacion_electronica
+RUN mkdir -p apps/frappe/frappe/locale apps/erpnext/erpnext/locale \
+    && curl -sL https://raw.githubusercontent.com/frappe/frappe/v16.24.0/frappe/locale/es.po -o apps/frappe/frappe/locale/es.po \
+    && curl -sL https://raw.githubusercontent.com/frappe/frappe/v16.24.0/frappe/locale/main.pot -o apps/frappe/frappe/locale/main.pot \
+    && curl -sL https://raw.githubusercontent.com/frappe/erpnext/v16.25.0/erpnext/locale/es.po -o apps/erpnext/erpnext/locale/es.po \
+    && curl -sL https://raw.githubusercontent.com/frappe/erpnext/v16.25.0/erpnext/locale/main.pot -o apps/erpnext/erpnext/locale/main.pot
+RUN env/bin/python /tmp/compile_po.py
+```
+
+> **NOTA:** NO se ejecuta `bench build` en el Dockerfile porque rompe los assets CSS/JS (el `assets.json` se desincroniza con los hashes de los archivos). Las traducciones .po se compilan manualmente con `compile_po.py` (babel) sin tocar los assets.
+
+### 2.6 Script de Actualización
+**Ubicación en el servidor:** `/root/fe-update-image.sh`
+
+Uso:
+```bash
+/root/fe-update-image.sh v16.25.0
+```
+Este script:
+1. Actualiza el Dockerfile FROM
+2. Construye la imagen `erpnext-fe:v16.25.0`
+3. La reetiqueta como `frappe/erpnext:v16.25.0` (reemplaza la stock localmente)
+4. Da instrucciones para actualizar FRAPPE_VERSION en Coolify y hacer redeploy
+
+---
+
+## 3. App Custom: facturacion_electronica
+
+### 3.1 Propósito
+Integración con **Factus API** para facturación electrónica colombiana (DIAN). Soporta:
+- **B2B Inmediata:** Cliente empresa → factura enviada a DIAN al someter
+- **CCF Resumen Diario:** Consumidor final → facturas agrupadas al cerrar caja
+
+### 3.2 Doctypes Custom
+| Doctype | Tipo | Propósito |
+|---|---|---|
+| Configuracion API FE | Single | Config global (sandbox/producción, timeouts, defaults) |
+| Dueno Fiscal | Normal | Entidad legal con credenciales Factus (NIT, DV, rango numeración) |
+| Log Factura Electronica | Document | Registro de cada envío a DIAN (payload, respuesta, CUFE, errores) |
+| Tipo Documento Identidad FE | Normal | Catálogo DIAN (CC=13, NIT=31, etc.) |
+| Tributo FE | Normal | Catálogo DIAN (IVA=01, No Aplica=ZZ) |
+| Municipio FE | Normal | Catálogo DIVIPOLA |
+| Codigo Impuesto FE | Normal | Catálogo DIAN (IVA=01, INC=04, Ultraprocesados=35) |
+| Unidad Medida FE | Normal | Catálogo DIAN (Unidad=94, KGM, LBR, etc.) |
+| Tipo Medio Pago FE | Normal | Catálogo DIAN (Efectivo=10, Transferencia=47, etc.) |
+
+### 3.3 Custom Fields en Doctypes Estándar
+| Doctype | Campo | Tipo | Propósito |
+|---|---|---|---|
+| Item | dueno_fiscal | Link→Dueno Fiscal | Asigna producto a entidad legal |
+| Account | fe_tax_code | Link→Codigo Impuesto FE | Mapeo impuesto DIAN |
+| Account | fe_is_excluded | Check | Excluido de impuesto |
+| UOM | fe_unit_measure_code | Link→Unidad Medida FE | Mapeo unidad DIAN |
+| Customer | requiere_factura_inmediata | Check | B2B (marcado) vs CCF (desmarcado) |
+| Customer | fe_numero_documento | Data | Número de documento |
+| Customer | fe_identification_document_code | Link→Tipo Doc Identidad FE | Tipo de documento |
+| Customer | fe_dv | Data | Dígito de verificación |
+| Customer | fe_tribute_code | Link→Tributo FE | Responsabilidad tributaria |
+| Customer | fe_municipality_code | Link→Municipio FE | Municipio DIVIPOLA |
+| Sales Invoice | estado_fe | Select | Pendiente/Enviada/Validada/Error/No Aplica/Agrupada |
+| Sales Invoice | cufe_fe | Data | CUFE de DIAN |
+| Sales Invoice | custom_enviar_dian | Check | Enviar a DIAN al someter |
+| POS Invoice | (mismos campos que Sales Invoice) | | |
+| Mode of Payment | fe_tipo_medio_pago | Link→Tipo Medio Pago FE | Mapeo medio de pago DIAN |
+
+### 3.4 Hooks Principales
+- `on_submit` de Sales Invoice → envía a DIAN si `custom_enviar_dian=1`
+- `on_submit` de POS Invoice (override class) → envía a DIAN si cliente B2B
+- `before_submit` de POS Closing Entry → bloquea cierre si hay facturas FE pendientes
+- `on_cancel` de POS Invoice → avisa que se necesita nota crédito electrónica
+- `scheduler_events.hourly` → reintenta facturas fallidas (máx 3 intentos)
+- `on_login` → redirige cajera/admin/contadora a `/desk/desktop`
+- `boot_session` → agrega `desktop_redirect` al boot data
+
+### 3.5 Flujo de Facturación Electrónica
+
+**B2B (Cliente empresa, requiere_factura_inmediata=1):**
+1. Crear/someter POS Invoice o Sales Invoice
+2. `custom_enviar_dian` se setea automáticamente a 1
+3. Se llama `enviar_factura_fe(doc, dueno, items, "Inmediata B2B")`
+4. Se crea Log Factura Electronica con estado "Pendiente"
+5. Se envía a Factus API (`POST /v2/bills/validate`)
+6. Si OK → estado="Validada", se guarda CUFE
+7. Si error → estado="Error", se reintentará cada hora
+
+**CCF (Consumidor final, requiere_factura_inmediata=0):**
+1. Vender normalmente en POS
+2. POS Invoice queda con `estado_fe = "Pendiente"`
+3. Al cerrar caja (POS Closing Entry):
+   - Botón "Enviar pendientes a DIAN" agrupa por dueño_fiscal
+   - Se crea un "Resumen Diario CCF" (una factura electrónica por dueño)
+   - Los POS Invoice se marcan `estado_fe = "Agrupada"`
+4. El cierre de caja se bloquea si hay pendientes
+
+### 3.6 Requisitos para que funcione
+1. **Items deben tener `dueno_fiscal` asignado** (campo en Item)
+2. **Dueno Fiscal debe tener credenciales Factus completas** (client_id, client_secret, username, password, numbering_range_id)
+3. **Configuracion API FE** debe tener `cliente_consumidor_final` configurado
+4. **Accounts de impuesto** deben tener `fe_tax_code` asignado
+5. **Mode of Payment** debe tener `fe_tipo_medio_pago` asignado
+
+---
+
+## 4. Configuraciones del Sistema
+
+### 4.1 Roles y Permisos
+| Rol | Usuario | Permisos clave |
+|---|---|---|
+| Superadmin | johssalinas2work@gmail.com | Todos los roles, System Manager |
+| Contadora | andrea@gmail.com | Accounts Manager, Sales/Purchase/Stock Manager, Item Manager |
+| Admin tienda | lorena@gmail.com | Sales Manager, Purchase Manager, Stock Manager, Accounts Manager, Item Manager |
+| Cajera | sharith@gmail.com | Sales User (POS Invoice, POS Opening/Closing, Customer, Item read, Mode of Payment read) |
+
+### 4.2 Desktop Layouts
+| Usuario | Redirigido a | Iconos en desktop |
+|---|---|---|
+| Sharith (cajera) | /desk/desktop | Solo Punto de Venta |
+| Lorena (admin) | /desk/desktop | POS, caja, ventas, compras, inventario, maestros, log FE (16 iconos) |
+| Andrea (contadora) | /desk/desktop | Facturas, pagos, asientos, cuentas, reportes, log FE, config FE (16 iconos) |
+| Johs (superadmin) | Workspace normal | No redirigido |
+
+### 4.3 Traducciones
+- **Idioma del sistema:** es (Español)
+- **Todos los usuarios:** language=es
+- **.po files:** Descargados de frappe v16.24.0 y erpnext v16.25.0, compilados a .mo con babel
+- **Translation doctype:** ~3,027 traducciones en BD (incluye POS, operadores de filtro, dashboards, etc.)
+- **Item → Producto** (no "Artículo")
+
+### 4.4 Migración de Siigo
+- **429 Sales Invoices** migradas (Enero-Junio 2026)
+- **Item genérico:** MIGRACION-SIIGO (no inventariado, UOM=Nos)
+- **Tax templates:** "Colombia Tax - SM" (19%) e "IVA 5% - SM" (5%)
+- **Pagos:** Cancelados vía Journal Entry contra cuenta 3710 (Pérdidas acumuladas), NO afecta caja
+- **Total migrado:** $122,087,245 base + $21,894,804 impuesto = $143,982,050
+
+### 4.5 Company / Warehouse / Cost Center
+- **Company:** Salsamentaria Multiespecial (abrev: SM)
+- **Warehouse:** Principal - SM
+- **Cost Center:** Principal - SM
+- **AR Account:** 13051 - Clientes - SM
+- **Tax Account:** 2408 - Impuesto sobre las ventas por pagar - SM
+
+---
+
+## 5. Procedimientos Operacionales
+
+### 5.1 Conectarse al Servidor
+```bash
+ssh -i ~/.ssh/id_ed25519_hetzner root@46.225.227.129
+```
+
+### 5.2 Ejecutar comandos en el backend de ERPNext
+```bash
+# Obtener el container ID del backend
+BC=$(docker ps -q --filter "name=backend-vvekd3jmyymltrmfoi8vdbdu" | head -1)
+
+# Ejecutar bench command
+docker exec $BC bash -lc 'cd /home/frappe/frappe-bench && bench --site salsamentariamultiespecial.duckdns.org <comando>'
+
+# Ejecutar script Python
+docker cp script.py $BC:/tmp/script.py
+docker exec $BC bash -lc 'cd /home/frappe/frappe-bench && cat > /path/to/app/utils/_temp.py << PYEOF
+import frappe
+def run():
+    # código aquí
+PYEOF
+bench --site salsamentariamultiespecial.duckdns.org execute module.path._temp.run'
+```
+
+### 5.3 Crear Backup
+```bash
+BC=$(docker ps -q --filter "name=backend-vvekd3jmyymltrmfoi8vdbdu" | head -1)
+
+# Backup del sitio (DB + archivos)
+docker exec $BC bash -lc 'cd /home/frappe/frappe-bench && bench --site salsamentariamultiespecial.duckdns.org backup --with-files'
+
+# Copiar backup fuera del contenedor
+docker cp $BC:/home/frappe/frappe-bench/sites/salsamentariamultiespecial.duckdns.org/private/backups/ /root/fe-backups/
+
+# Backup adicional: dump directo de MariaDB
+docker exec $(docker ps -q --filter "name=db-vvekd3jmyymltrmfoi8vdbdu" | head -1) \
+  mariadb-dump -u root --password='I3CcGBT7iS36t^AK' \
+  --single-transaction salsamentariamultiespecial_duckdns_org | gzip > /root/fe-backups/db_dump_$(date +%Y%m%d).sql.gz
+```
+
+### 5.4 Restaurar Backup
+```bash
+BC=$(docker ps -q --filter "name=backend-vvekd3jmyymltrmfoi8vdbdu" | head -1)
+
+# Restaurar desde archivo
+docker exec $BC bash -lc 'cd /home/frappe/frappe-bench && bench --site salsamentariamultiespecial.duckdns.org restore /path/to/backup.sql.gz --with-private-files /path/to/private-files.tar --with-public-files /path/to/files.tar'
+```
+
+### 5.5 Desplegar Cambios de la App (sin perder datos)
+
+**PASO 1: Hacer push de cambios a GitHub**
+```bash
+cd /Users/johs.brayan.salinas/Documents/facturacion-electronica
+git add -A
+git commit -m "descripción del cambio"
+git push origin master
+```
+
+**PASO 2: Reconstruir la imagen Docker custom en el servidor**
+```bash
+ssh -i ~/.ssh/id_ed25519_hetzner root@46.225.227.129
+
+# Construir nueva imagen
+docker build -t erpnext-fe:v16.25.0 /root/fe-image/
+
+# Reetiquetar como frappe/erpnext (Coolify usa este tag)
+docker tag erpnext-fe:v16.25.0 frappe/erpnext:v16.25.0
+```
+
+**PASO 3: Disparar redeploy via Coolify API**
+```bash
+curl -X POST \
+  -H "Authorization: Bearer 2|WCIlYtdQc0gq8TexAtkPRmWZX6lYc0GwDJlBG3Nl89ba61fd" \
+  "http://localhost:8000/api/v1/applications/vvekd3jmyymltrmfoi8vdbdu/start"
+```
+
+> **Coolify NO hace `docker compose pull`** — usa la imagen local. Por eso el re-tag funciona.
+
+**PASO 4: Después del redeploy, ejecutar migrate si hay cambios en doctypes**
+```bash
+BC=$(docker ps -q --filter "name=backend-vvekd3jmyymltrmfoi8vdbdu" | head -1)
+docker exec $BC bash -lc 'cd /home/frappe/frappe-bench && bench --site salsamentariamultiespecial.duckdns.org migrate'
+docker exec $BC bash -lc 'cd /home/frappe/frappe-bench && bench --site salsamentariamultiespecial.duckdns.org clear-cache'
+```
+
+**PASO 5: Reiniciar contenedores bench si es necesario**
+```bash
+P=vvekd3jmyymltrmfoi8vdbdu
+for svc in backend scheduler queue-default queue-short queue-long frontend websocket; do
+  cid=$(docker ps -q --filter "name=$svc-$P" | head -1)
+  [ -n "$cid" ] && docker restart "$cid"
+done
+```
+
+### 5.6 Actualizar Versión de ERPNext/Frappe
+```bash
+ssh -i ~/.ssh/id_ed25519_hetzner root@46.225.227.129
+
+# 1. Actualizar el Dockerfile (el script lo hace)
+/root/fe-update-image.sh v16.XX.X
+
+# 2. Hacer pull de la imagen stock (para que el FROM tenga base limpia)
+docker pull frappe/erpnext:v16.XX.X
+
+# 3. Reconstruir imagen custom
+docker build -t erpnext-fe:v16.XX.X /root/fe-image/
+docker tag erpnext-fe:v16.XX.X frappe/erpnext:v16.XX.X
+
+# 4. Actualizar FRAPPE_VERSION en Coolify via API
+curl -X PATCH \
+  -H "Authorization: Bearer 2|WCIlYtdQc0gq8TexAtkPRmWZX6lYc0GwDJlBG3Nl89ba61fd" \
+  -H "Content-Type: application/json" \
+  -d '{"key":"FRAPPE_VERSION","value":"v16.XX.X","is_buildtime":true,"is_preview":false}' \
+  "http://localhost:8000/api/v1/applications/vvekd3jmyymltrmfoi8vdbdu/envs"
+
+# 5. Redeploy
+curl -X POST \
+  -H "Authorization: Bearer 2|WCIlYtdQc0gq8TexAtkPRmWZX6lYc0GwDJlBG3Nl89ba61fd" \
+  "http://localhost:8000/api/v1/applications/vvekd3jmyymltrmfoi8vdbdu/start"
+
+# 6. Después del deploy: migrate + build + clear-cache
+BC=$(docker ps -q --filter "name=backend-vvekd3jmyymltrmfoi8vdbdu" | head -1)
+docker exec $BC bash -lc 'export PATH=/home/frappe/.nvm/versions/node/v24.12.0/bin:$PATH; cd /home/frappe/frappe-bench && bench --site salsamentariamultiespecial.duckdns.org migrate'
+docker exec $BC bash -lc 'cd /home/frappe/frappe-bench && bench --site salsamentariamultiespecial.duckdns.org clear-cache'
+```
+
+> **ADVERTENCIA:** NUNCA ejecutar `bench build` en el contenedor para las traducciones — rompe los assets CSS/JS. Solo compilar .po a .mo con babel.
+
+### 5.7 Cambiar de Sandbox a Producción (Factus)
+1. Ir a: https://salsamentariamultiespecial.duckdns.org/app/configuracion-api-fe
+2. Cambiar "Ambiente" de `Sandbox` a `Produccion`
+3. Ir a: https://salsamentariamultiespecial.duckdns.org/app/dueno-fiscal/Lorena
+4. Completar credenciales de PRODUCCIÓN de Factus
+5. Verificar con el botón "Probar Conexión" (si está disponible)
+6. Clear cache: `bench --site <site> clear-cache`
+
+### 5.8 Limpiar Cache
+```bash
+BC=$(docker ps -q --filter "name=backend-vvekd3jmyymltrmfoi8vdbdu" | head -1)
+docker exec $BC bash -lc 'cd /home/frappe/frappe-bench && bench --site salsamentariamultiespecial.duckdns.org clear-cache'
+```
+
+### 5.9 Ver Logs
+```bash
+# Backend
+docker logs --tail 50 $(docker ps -q --filter "name=backend-vvekd3jmyymltrmfoi8vdbdu" | head -1)
+
+# Frontend (nginx)
+docker logs --tail 50 $(docker ps -q --filter "name=frontend-vvekd3jmyymltrmfoi8vdbdu" | head -1)
+
+# Coolify deploy logs
+docker exec coolify-db psql -U coolify -d coolify -c "SELECT logs FROM application_deployment_queues WHERE application_id='1' ORDER BY created_at DESC LIMIT 1;" | tail -50
+```
+
+### 5.10 Agregar Traducciones
+```python
+# Crear script temporal en el contenedor
+import frappe
+
+def run():
+    translations = {
+        "English String": "Traducción Español",
+    }
+    for source, translated in translations.items():
+        existing = frappe.db.get_value("Translation", {"language": "es", "source_text": source})
+        if not existing:
+            doc = frappe.get_doc({
+                "doctype": "Translation",
+                "language": "es",
+                "source_text": source,
+                "translated_text": translated,
+            })
+            doc.flags.ignore_permissions = True
+            doc.insert()
+    frappe.db.commit()
+```
+
+Después: `bench --site <site> clear-cache` + restart frontend.
+
+---
+
+## 6. Pendientes y Estados Conocidos
+
+### 6.1 Facturación Electrónica — PENDIENTE
+- [ ] **Items sin dueno_fiscal:** NINGÚN producto tiene Dueño Fiscal asignado. Sin esto, no se genera ninguna factura electrónica.
+- [ ] **Dueno Fiscal sin credenciales:** Falta client_id, client_secret, username, password, numbering_range_id de Factus.
+- [ ] **Accounts sin fe_tax_code:** Verificar que las cuentas de impuesto tengan el código DIAN asignado.
+- [ ] **Mode of Payment:** Ya están asignados (Cash→Efectivo, Credit Card→Tarjeta de Crédito, etc.)
+
+### 6.2 Inventario — PENDIENTE
+- [ ] El usuario debe hacer un ajuste de inventario manual producto por producto
+
+### 6.3 Traducciones
+- 3,027 traducciones en BD. Algunas pueden tener errores menores de word-replacement.
+- Si se encuentran strings en inglés, agregar vía Translation doctype + clear cache.
+
+### 6.4 Assets CSS/JS
+- Los assets vienen de la imagen stock (consistentes). NO ejecutar `bench build` o se desincroniza `assets.json`.
+- Las traducciones .mo se compilan con babel (`compile_po.py`), no con `bench build`.
+
+---
+
+## 7. Estructura del Repo Local
+
+```
+/Users/johs.brayan.salinas/Documents/facturacion-electronica/
+├── facturacion_electronica/
+│   ├── hooks.py                          # Hooks principales (on_login, boot_session, doc_events, etc.)
+│   ├── patches.txt                       # Patches de migración
+│   ├── __init__.py
+│   ├── events/
+│   │   ├── auth.py                       # on_login redirect + boot_session desktop_redirect
+│   │   ├── sales_invoice.py             # before_submit, on_submit (envío DIAN)
+│   │   ├── pos_invoice.py               # on_cancel, reenviar_pos_invoice_dian
+│   │   └── pos_closing_entry.py         # before_submit (bloquear si pendientes), enviar_pendientes_fe
+│   ├── overrides/
+│   │   └── pos_invoice.py               # CustomPOSInvoice (before_submit, on_submit)
+│   ├── utils/
+│   │   ├── api_fe.py                     # API Factus (auth, emitir, descargar PDF, _fe_codigo helper)
+│   │   ├── agrupacion.py                 # Agrupar CCF para resumen diario
+│   │   ├── retry.py                      # Scheduler hourly reintentar facturas fallidas
+│   │   └── validacion.py                # Cálculo de dígito de verificación NIT
+│   ├── fixtures/
+│   │   └── custom_field.json             # Definición de todos los Custom Fields
+│   ├── facturacion_electronica/
+│   │   └── doctype/
+│   │       ├── configuracion_api_fe/     # Single - config global
+│   │       ├── dueno_fiscal/             # Normal - entidad legal
+│   │       ├── log_factura_electronica/  # Document - log de envíos DIAN
+│   │       ├── tipo_documento_identidad_fe/
+│   │       ├── tributo_fe/
+│   │       ├── municipio_fe/
+│   │       ├── codigo_impuesto_fe/
+│   │       ├── unidad_medida_fe/
+│   │       └── tipo_medio_pago_fe/
+│   ├── patches/
+│   │   ├── v0_0_2/remove_item_fe_tax_fields.py
+│   │   ├── v0_0_3/remove_item_fe_uom_standard_fields.py
+│   │   └── v0_0_4/migrar_campos_link_fe.py  # Migración Select→Link + crear registros default
+│   └── public/
+│       └── js/
+│           ├── sales_invoice.js           # Botones FE en Sales/POS Invoice
+│           ├── pos_closing_entry.js       # Botón "Enviar pendientes a DIAN"
+│           └── desktop_redirect.js        # Redirect cajera/admin/contadora a /desk/desktop
+├── pyproject.toml
+├── setup.py
+└── requirements.txt
+```
+
+---
+
+## 8. Comandos Rápidos de Referencia
+
+```bash
+# SSH al servidor
+ssh -i ~/.ssh/id_ed25519_hetzner root@46.225.227.129
+
+# Backend container ID
+BC=$(docker ps -q --filter "name=backend-vvekd3jmyymltrmfoi8vdbdu" | head -1)
+
+# Migrate
+docker exec $BC bash -lc 'cd /home/frappe/frappe-bench && bench --site salsamentariamultiespecial.duckdns.org migrate'
+
+# Clear cache
+docker exec $BC bash -lc 'cd /home/frappe/frappe-bench && bench --site salsamentariamultiespecial.duckdns.org clear-cache'
+
+# Backup
+docker exec $BC bash -lc 'cd /home/frappe/frappe-bench && bench --site salsamentariamultiespecial.duckdns.org backup --with-files'
+
+# Build app (solo si es necesario, NO hacer build general)
+docker exec $BC bash -lc 'export PATH=/home/frappe/.nvm/versions/node/v24.12.0/bin:$PATH; cd /home/frappe/frappe-bench && bench build --app facturacion_electronica'
+
+# Redeploy Coolify
+curl -X POST -H "Authorization: Bearer 2|WCIlYtdQc0gq8TexAtkPRmWZX6lYc0GwDJlBG3Nl89ba61fd" "http://localhost:8000/api/v1/applications/vvekd3jmyymltrmfoi8vdbdu/start"
+
+# Reconstruir imagen custom
+docker build -t erpnext-fe:v16.25.0 /root/fe-image/ && docker tag erpnext-fe:v16.25.0 frappe/erpnext:v16.25.0
+
+# Restart todos los bench containers
+P=vvekd3jmyymltrmfoi8vdbdu; for svc in backend scheduler queue-default queue-short queue-long frontend websocket; do cid=$(docker ps -q --filter "name=$svc-$P" | head -1); [ -n "$cid" ] && docker restart "$cid"; done
+```
+
+---
+
+*Documento generado el 30 de Junio de 2026. Mantener actualizado ante cambios en credenciales o arquitectura.*
