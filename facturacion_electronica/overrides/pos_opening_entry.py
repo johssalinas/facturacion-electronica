@@ -6,10 +6,9 @@ from erpnext.accounts.doctype.pos_opening_entry.pos_opening_entry import POSOpen
 class CustomPOSOpeningEntry(POSOpeningEntry):
 	"""Override POS Opening Entry to support shared cash register.
 
-	In this setup, one person opens the cash register and everyone sells on it.
-	The validation that prevents opening a profile already open is kept (we want
-	only ONE open register at a time). But check_opening_entry is overridden to
-	let any user find and use the open register.
+	We keep the standard validation that prevents opening a profile already open
+	(since we want only ONE open register at a time). The key change is in
+	check_opening_entry which lets any user find and use the existing open register.
 	"""
 	pass
 

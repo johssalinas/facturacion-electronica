@@ -169,7 +169,15 @@ def _build_shared_invoice_query(invoice_doctype, pos_profile, start, end):
 				(fn.Timestamp(InvoiceDocType.posting_date, InvoiceDocType.posting_time) >= start)
 				& (fn.Timestamp(InvoiceDocType.posting_date, InvoiceDocType.posting_time) <= end)
 			)
-			& (InvoiceDocType.consolidated_invoice.isnull() | (InvoiceDocType.consolidated_invoice == ""))
 		)
 	)
+
+	if invoice_doctype == "POS Invoice":
+		query = query.where(fn.IfNull(InvoiceDocType.consolidated_invoice, "").eq(""))
+	else:
+		query = query.where(
+			(InvoiceDocType.is_created_using_pos == 1)
+			& fn.IfNull(InvoiceDocType.pos_closing_entry, "").eq("")
+		)
+
 	return query
