@@ -153,170 +153,171 @@ frappe.require("point-of-sale.bundle.js", function () {
 
 	// ===================================================================
 	// 6. INLINE CART EDITING: qty input + delete button directly in cart
+	// Uses MutationObserver to intercept cart renders reliably
 	// ===================================================================
-	if (erpnext.PointOfSale.ItemCart) {
-		var ItemCart = erpnext.PointOfSale.ItemCart;
 
-		// Inject CSS for inline cart controls
-		var cart_css = `
-			<style>
-				.cart-item-wrapper .inline-cart-controls {
-					display: flex;
-					align-items: center;
-					gap: 4px;
-					min-width: 90px;
-				}
-				.cart-item-wrapper .inline-qty-input {
-					width: 50px;
-					text-align: center;
-					border: 1px solid var(--border-color);
-					border-radius: 4px;
-					padding: 2px 4px;
-					font-size: 13px;
-					font-weight: bold;
-					background: var(--control-bg);
-					color: var(--text-color);
-				}
-				.cart-item-wrapper .inline-qty-input:focus {
-					border-color: var(--primary);
-					outline: none;
-					box-shadow: 0 0 0 1px var(--primary);
-				}
-				.cart-item-wrapper .inline-delete-btn {
-					cursor: pointer;
-					color: var(--red-500);
-					font-size: 18px;
-					font-weight: bold;
-					padding: 0 6px;
-					line-height: 1;
-					border-radius: 4px;
-					opacity: 0.7;
-					flex-shrink: 0;
-				}
-				.cart-item-wrapper .inline-delete-btn:hover {
-					opacity: 1;
-					background: var(--red-50);
-				}
-				.cart-item-wrapper .item-name-desc {
-					flex: 1;
-					min-width: 0;
-				}
-			</style>
-		`;
-		$("head").append(cart_css);
+	// Inject CSS
+	$("head").append(`
+		<style>
+			.cart-item-wrapper .inline-cart-controls {
+				display: flex;
+				align-items: center;
+				gap: 4px;
+				min-width: 90px;
+			}
+			.cart-item-wrapper .inline-qty-input {
+				width: 50px;
+				text-align: center;
+				border: 1px solid var(--border-color);
+				border-radius: 4px;
+				padding: 2px 4px;
+				font-size: 13px;
+				font-weight: bold;
+				background: var(--control-bg);
+				color: var(--text-color);
+			}
+			.cart-item-wrapper .inline-qty-input:focus {
+				border-color: var(--primary);
+				outline: none;
+				box-shadow: 0 0 0 1px var(--primary);
+			}
+			.cart-item-wrapper .inline-delete-btn {
+				cursor: pointer;
+				color: var(--red-500);
+				font-size: 18px;
+				font-weight: bold;
+				padding: 2px 6px;
+				line-height: 1;
+				border-radius: 4px;
+				opacity: 0.7;
+				flex-shrink: 0;
+			}
+			.cart-item-wrapper .inline-delete-btn:hover {
+				opacity: 1;
+				background: var(--red-50);
+			}
+		</style>
+	`);
 
-		// Override render_cart_item to add inline controls
-		var original_render = ItemCart.prototype.render_cart_item;
-		ItemCart.prototype.render_cart_item = function (item_data, $item_to_update) {
-			// Call original render first
-			original_render.call(this, item_data, $item_to_update);
-
-			// Now replace the qty display with an inline input + delete button
-			var $item = $item_to_update.length ? $item_to_update : this.get_cart_item(item_data);
-			if (!$item || !$item.length) return;
-
-			var $qty_div = $item.find(".item-qty");
-			if (!$qty_div.length) return;
-
-			var qty = item_data.qty || 0;
+	function enhance_cart_items() {
+		$(".cart-item-wrapper").each(function () {
+			var $item = $(this);
 			var row_name = $item.attr("data-row-name");
+			if (!row_name) return;
 
-			// Replace qty text with input (delete button will be prepended to the row)
-			$qty_div.html(
+			// Skip if already enhanced
+			if ($item.find(".inline-qty-input").length) return;
+
+			var $qty_span = $item.find(".item-qty span");
+			if (!$qty_span.length) return;
+
+			// Parse current qty from text like "3 Unit"
+			var qty_text = $qty_span.text().trim();
+			var qty = parseFloat(qty_text) || 1;
+
+			// Replace qty span with editable input
+			$item.find(".item-qty").html(
 				'<div class="inline-cart-controls">' +
 					'<input type="number" class="inline-qty-input" data-row="' + row_name + '" value="' + qty + '" min="1" step="1">' +
 				'</div>'
 			);
 
-			// Add delete button at the beginning of the cart item (before image/name)
+			// Add delete button at the start of the item row
 			if (!$item.find(".inline-delete-btn").length) {
-				$item.prepend('<span class="inline-delete-btn" data-row="' + row_name + '" title="Eliminar">&times;</span>');
+				$item.prepend(
+					'<span class="inline-delete-btn" data-row="' + row_name + '" title="Eliminar">&times;</span>'
+				);
 			}
-		};
+		});
+	}
 
-		// Override make_cart_items_section to add event handlers for inline controls
-		var original_make = ItemCart.prototype.make_cart_items_section;
-		ItemCart.prototype.make_cart_items_section = function () {
-			original_make.call(this);
-			var me = this;
-			var qty_change_timeout = null;
+	// Use MutationObserver to detect when cart items are rendered/updated
+	function setup_cart_observer() {
+		var $cart_section = $(".cart-items-section");
+		if (!$cart_section.length) {
+			// Retry until the cart section exists
+			setTimeout(setup_cart_observer, 500);
+			return;
+		}
 
-			// Handle qty input change (both typing and arrow clicks)
-			this.$cart_items_wrapper.on("input", ".inline-qty-input", function (e) {
-				e.stopPropagation();
-				var $input = $(this);
-				var row_name = $input.data("row");
-				var new_qty = flt($input.val());
+		// Enhance existing items
+		enhance_cart_items();
 
-				// Debounce to avoid too many updates while typing
-				clearTimeout(qty_change_timeout);
-				qty_change_timeout = setTimeout(function () {
-					if (new_qty <= 0) new_qty = 1;
-					$input.val(new_qty);
+		// Observe for new items being added/changed
+		var observer = new MutationObserver(function () {
+			enhance_cart_items();
+		});
+		observer.observe($cart_section[0], { childList: true, subtree: true, characterData: true });
 
-					if (!window.cur_pos) return;
-					var frm = window.cur_pos.frm;
-					var item_row = frm.doc.items.find(function (i) { return i.name === row_name; });
-					if (!item_row) return;
+		// Event delegation for qty change
+		var qty_timeout = null;
+		$cart_section.on("input", ".inline-qty-input", function (e) {
+			e.stopPropagation();
+			var $input = $(this);
+			var row_name = $input.data("row");
+			var new_qty = parseFloat($input.val());
 
-					// Directly set the value in the model and update the cart
-					frappe.model.set_value(item_row.doctype, item_row.name, "qty", new_qty)
-						.then(function () {
-							// Refresh item_row reference after set_value
-							item_row = frm.doc.items.find(function (i) { return i.name === row_name; });
-							if (item_row) {
-								window.cur_pos.update_cart_html(item_row);
-							}
-						});
-				}, 400);
-			});
-
-			// Handle delete button click - use the same approach as the original remove
-			this.$cart_items_wrapper.on("click", ".inline-delete-btn", function (e) {
-				e.stopPropagation();
-				var row_name = $(this).data("row");
-
+			clearTimeout(qty_timeout);
+			qty_timeout = setTimeout(function () {
+				if (!new_qty || new_qty <= 0) {
+					new_qty = 1;
+					$input.val(1);
+				}
 				if (!window.cur_pos) return;
 				var frm = window.cur_pos.frm;
 				var item_row = frm.doc.items.find(function (i) { return i.name === row_name; });
 				if (!item_row) return;
 
-				// Replicate the original remove_item_from_cart logic
-				frappe.dom.freeze();
-				frappe.model.set_value(item_row.doctype, item_row.name, "qty", 0)
+				frappe.model.set_value(item_row.doctype, item_row.name, "qty", new_qty)
 					.then(function () {
-						frappe.model.clear_doc(item_row.doctype, item_row.name);
-						window.cur_pos.update_cart_html(item_row, true);
-						// Close item details panel if open
-						if (window.cur_pos.item_details) {
-							window.cur_pos.item_details.toggle_item_details_section(null);
+						item_row = frm.doc.items.find(function (i) { return i.name === row_name; });
+						if (item_row && window.cur_pos) {
+							window.cur_pos.cart.update_totals_section(frm);
 						}
-						frappe.dom.unfreeze();
-					})
-					.catch(function (err) {
-						console.log(err);
-						frappe.dom.unfreeze();
 					});
-			});
+			}, 400);
+		});
 
-			// Prevent click on input/delete from triggering cart_item_clicked (opening details panel)
-			this.$cart_items_wrapper.on("click", ".inline-qty-input, .inline-delete-btn", function (e) {
-				e.stopPropagation();
-			});
+		// Event delegation for delete
+		$cart_section.on("click", ".inline-delete-btn", function (e) {
+			e.stopPropagation();
+			var row_name = $(this).data("row");
+			if (!window.cur_pos) return;
+			var frm = window.cur_pos.frm;
+			var item_row = frm.doc.items.find(function (i) { return i.name === row_name; });
+			if (!item_row) return;
 
-			// Prevent clicking cart items from opening the item details panel
-			// The user wants a fast flow without the side panel
-			this.$cart_items_wrapper.on("click", ".cart-item-wrapper", function (e) {
-				// Only allow the default behavior if clicking on item-name (for those who need details)
-				if (!$(e.target).closest(".item-name").length) {
-					e.stopImmediatePropagation();
-				}
-			});
+			frappe.dom.freeze();
+			frappe.model.set_value(item_row.doctype, item_row.name, "qty", 0)
+				.then(function () {
+					frappe.model.clear_doc(item_row.doctype, item_row.name);
+					window.cur_pos.update_cart_html(item_row, true);
+					if (window.cur_pos.item_details) {
+						window.cur_pos.item_details.toggle_item_details_section(null);
+					}
+					frappe.dom.unfreeze();
+				})
+				.catch(function () { frappe.dom.unfreeze(); });
+		});
 
-			// Select all text on focus for quick typing
-			this.$cart_items_wrapper.on("focus", ".inline-qty-input", function () {
-				$(this).select();
-			});
-		};
+		// Prevent clicks on controls from opening item details panel
+		$cart_section.on("click", ".inline-qty-input, .inline-delete-btn", function (e) {
+			e.stopPropagation();
+		});
+
+		// Block cart-item click from opening details panel (only name click opens it)
+		$cart_section.on("click", ".cart-item-wrapper", function (e) {
+			if (!$(e.target).closest(".item-name").length) {
+				e.stopImmediatePropagation();
+			}
+		});
+
+		// Select all on focus
+		$cart_section.on("focus", ".inline-qty-input", function () {
+			$(this).select();
+		});
 	}
+
+	// Start observing once the POS page is ready
+	setTimeout(setup_cart_observer, 1000);
 });
