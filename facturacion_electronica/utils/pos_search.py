@@ -13,30 +13,40 @@ def get_items_with_barcode_search(
 	First calls the standard ERPNext get_items (which handles exact barcode
 	match via scan_barcode, plus item_code/item_name LIKE search), then
 	supplements with items whose barcode partially matches the search term.
+
+	Uses ignore_permissions for Item Price lookups since POS users (cajeras)
+	need to see prices but don't have direct Item Price read access.
 	"""
 	from erpnext.selling.page.point_of_sale.point_of_sale import (
 		get_items as _original_get_items,
 	)
 
-	result = _original_get_items(
-		start, page_length, price_list, item_group, pos_profile, search_term
-	)
+	# Wrap with ignore_permissions so POS users can search barcodes and prices
+	original_flags = frappe.flags.ignore_permissions
+	frappe.flags.ignore_permissions = True
 
-	if not result or isinstance(result, list):
-		result = {"items": []}
-
-	items = result.get("items", [])
-
-	if search_term:
-		existing_codes = {item.get("item_code") for item in items}
-		barcode_items = _search_items_by_barcode(
-			search_term, price_list, pos_profile, item_group, existing_codes
+	try:
+		result = _original_get_items(
+			start, page_length, price_list, item_group, pos_profile, search_term
 		)
-		if barcode_items:
-			items.extend(barcode_items)
-			result["items"] = items
 
-	return result
+		if not result or isinstance(result, list):
+			result = {"items": []}
+
+		items = result.get("items", [])
+
+		if search_term:
+			existing_codes = {item.get("item_code") for item in items}
+			barcode_items = _search_items_by_barcode(
+				search_term, price_list, pos_profile, item_group, existing_codes
+			)
+			if barcode_items:
+				items.extend(barcode_items)
+				result["items"] = items
+
+		return result
+	finally:
+		frappe.flags.ignore_permissions = original_flags
 
 
 def _search_items_by_barcode(search_term, price_list, pos_profile, item_group, existing_codes):
@@ -44,6 +54,8 @@ def _search_items_by_barcode(search_term, price_list, pos_profile, item_group, e
 
 	Returns items in the same format as the standard POS get_items so the
 	frontend can render them without modification.
+	Uses ignore_permissions since this is called from POS context where
+	the user has been validated via POS Profile access.
 	"""
 	from erpnext.accounts.doctype.pos_invoice.pos_invoice import get_stock_availability
 	from erpnext.stock.get_item_details import get_conversion_factor
@@ -52,6 +64,20 @@ def _search_items_by_barcode(search_term, price_list, pos_profile, item_group, e
 	warehouse, hide_unavailable_items = frappe.db.get_value(
 		"POS Profile", pos_profile, ["warehouse", "hide_unavailable_items"]
 	)
+
+	return _do_barcode_search(
+		search_term, price_list, pos_profile, item_group,
+		existing_codes, warehouse, hide_unavailable_items
+	)
+
+
+def _do_barcode_search(
+	search_term, price_list, pos_profile, item_group,
+	existing_codes, warehouse, hide_unavailable_items
+):
+	from erpnext.accounts.doctype.pos_invoice.pos_invoice import get_stock_availability
+	from erpnext.stock.get_item_details import get_conversion_factor
+	from erpnext.selling.page.point_of_sale.point_of_sale import get_item_group_condition
 
 	if not frappe.db.exists("Item Group", item_group):
 		item_group = get_root_of("Item Group")
