@@ -4,44 +4,54 @@ from erpnext.accounts.doctype.pos_opening_entry.pos_opening_entry import POSOpen
 
 
 class CustomPOSOpeningEntry(POSOpeningEntry):
-	"""Override POS Opening Entry to allow multiple users to open the same POS Profile.
+	"""Override POS Opening Entry to support shared cash register.
 
-	In a small store, multiple people (cajera + administradora) may need to sell
-	from different devices using the same POS Profile. Each user opens and closes
-	their own cash register independently.
-
-	Changes:
-	- Removes the check that blocks opening a POS Profile if it's already open by another user.
-	- Keeps the check that prevents the same user from having two open POS sessions.
+	In this setup, one person opens the cash register and everyone sells on it.
+	The validation that prevents opening a profile already open is kept (we want
+	only ONE open register at a time). But check_opening_entry is overridden to
+	let any user find and use the open register.
 	"""
+	pass
 
-	def validate(self):
-		# Call parent validate but skip check_open_pos_exists
-		self.validate_pos_profile_and_cashier()
-		self.check_user_already_assigned()
-		self.validate_payment_method_account()
 
-	def validate_pos_profile_and_cashier(self):
-		"""Same as parent but without the 'profile already open' check."""
-		from frappe.utils import cint
+@frappe.whitelist()
+def check_opening_entry(user):
+	"""Find any open POS Opening Entry for the user's assigned POS Profiles.
 
-		if not frappe.db.exists("POS Profile", self.pos_profile):
-			frappe.throw(_("POS Profile {} does not exist.").format(self.pos_profile))
+	Unlike the standard version which only returns entries opened by the current user,
+	this returns ANY open entry for a POS Profile the user has access to.
+	This allows multiple users to sell on the same open cash register.
+	"""
+	# Get POS Profiles this user is allowed to use
+	user_profiles = frappe.get_all(
+		"POS Profile User",
+		filters={"user": user},
+		fields=["parent"],
+		pluck="parent",
+	)
 
-		pos_profile_company, pos_profile_disabled = frappe.db.get_value(
-			"POS Profile", self.pos_profile, ["company", "disabled"]
+	if not user_profiles:
+		# Fallback: check if there's any POS Profile without user restrictions
+		user_profiles = frappe.get_all(
+			"POS Profile",
+			filters={"disabled": 0},
+			fields=["name"],
+			pluck="name",
 		)
 
-		if pos_profile_disabled:
-			frappe.throw(_("POS Profile {} is disabled.").format(frappe.bold(self.pos_profile)))
+	if not user_profiles:
+		return []
 
-		if self.company != pos_profile_company:
-			frappe.throw(
-				_("POS Profile {} does not belong to company {}").format(self.pos_profile, self.company)
-			)
+	# Find any open POS Opening Entry for those profiles (regardless of who opened it)
+	open_vouchers = frappe.get_all(
+		"POS Opening Entry",
+		filters={
+			"pos_profile": ["in", user_profiles],
+			"pos_closing_entry": ["in", ["", None]],
+			"docstatus": 1,
+		},
+		fields=["name", "company", "pos_profile", "period_start_date"],
+		order_by="period_start_date desc",
+	)
 
-		if not cint(frappe.db.get_value("User", self.user, "enabled")):
-			frappe.throw(_("User {} is disabled. Please select valid user/cashier").format(self.user))
-
-		# NOTE: We intentionally do NOT call check_open_pos_exists() here.
-		# This allows multiple users to have the same POS Profile open simultaneously.
+	return open_vouchers
