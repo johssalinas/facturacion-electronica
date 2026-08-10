@@ -5,6 +5,14 @@ from facturacion_electronica.utils.api_fe import _duenos_en_factura, enviar_fact
 
 
 def before_submit(doc, method=None):
+	# Set mode_of_payment_display for list view
+	if doc.get("payments"):
+		modes = []
+		for p in doc.payments:
+			if p.amount and p.amount > 0 and p.mode_of_payment not in modes:
+				modes.append(p.mode_of_payment)
+		doc.mode_of_payment_display = ", ".join(modes) if modes else ""
+
 	if doc.get("es_resumen_diario_ccf"):
 		doc.custom_enviar_dian = 1
 		return
