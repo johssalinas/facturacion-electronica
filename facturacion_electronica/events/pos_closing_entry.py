@@ -96,3 +96,31 @@ def enviar_pendientes_fe(name):
 			"message": _("Algunas facturas no pudieron enviarse a la DIAN. Revise el Log."),
 		}
 	return {"ok": True, "enviadas": enviadas, "errores": [], "message": _("Facturas enviadas a la DIAN")}
+
+
+
+@frappe.whitelist()
+def get_mode_of_payment_map(invoice_names):
+	"""Return a dict mapping invoice name -> mode of payment string."""
+	import json
+	if isinstance(invoice_names, str):
+		invoice_names = json.loads(invoice_names)
+
+	if not invoice_names:
+		return {}
+
+	payments = frappe.db.sql("""
+		SELECT parent, mode_of_payment, amount
+		FROM `tabSales Invoice Payment`
+		WHERE parent IN %(names)s AND amount > 0
+		ORDER BY amount DESC
+	""", {"names": invoice_names}, as_dict=True)
+
+	mop_map = {}
+	for p in payments:
+		if p.parent not in mop_map:
+			mop_map[p.parent] = []
+		if p.mode_of_payment not in mop_map[p.parent]:
+			mop_map[p.parent].append(p.mode_of_payment)
+
+	return {k: ", ".join(v) for k, v in mop_map.items()}
