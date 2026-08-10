@@ -17,6 +17,7 @@ override_doctype_class = {
 	"POS Invoice": "facturacion_electronica.overrides.pos_invoice.CustomPOSInvoice",
 	"POS Opening Entry": "facturacion_electronica.overrides.pos_opening_entry.CustomPOSOpeningEntry",
 	"POS Closing Entry": "facturacion_electronica.overrides.pos_closing_entry.CustomPOSClosingEntry",
+	"Sales Invoice": "facturacion_electronica.overrides.sales_invoice.CustomSalesInvoice",
 }
 
 override_whitelisted_methods = {

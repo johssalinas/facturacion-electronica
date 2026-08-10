@@ -521,8 +521,26 @@ frappe.require("point-of-sale.bundle.js", function () {
 // Allows the cash register to stay open across midnight
 // =============================================================================
 
-frappe.require("point-of-sale.bundle.js", function () {
-	if (!erpnext.PointOfSale || !erpnext.PointOfSale.Controller) return;
-	// Override to do nothing - no date restriction on opening entry
-	erpnext.PointOfSale.Controller.prototype.check_outdated_pos_opening_entry = function () {};
-});
+// Patch immediately without waiting for bundle (it may already be loaded)
+(function() {
+	function disable_outdated_check() {
+		if (erpnext && erpnext.PointOfSale && erpnext.PointOfSale.Controller) {
+			erpnext.PointOfSale.Controller.prototype.check_outdated_pos_opening_entry = function () {};
+			return true;
+		}
+		return false;
+	}
+	// Try immediately
+	if (!disable_outdated_check()) {
+		// Retry every 200ms until available
+		var attempts = 0;
+		var interval = setInterval(function() {
+			if (disable_outdated_check() || attempts > 50) clearInterval(interval);
+			attempts++;
+		}, 200);
+	}
+	// Also override after require in case it loads later
+	frappe.require("point-of-sale.bundle.js", function () {
+		disable_outdated_check();
+	});
+})();
