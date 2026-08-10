@@ -513,3 +513,16 @@ frappe.require("point-of-sale.bundle.js", function () {
 		};
 	}
 });
+
+
+
+// =============================================================================
+// 9. DISABLE OUTDATED POS OPENING ENTRY CHECK
+// Allows the cash register to stay open across midnight
+// =============================================================================
+
+frappe.require("point-of-sale.bundle.js", function () {
+	if (!erpnext.PointOfSale || !erpnext.PointOfSale.Controller) return;
+	// Override to do nothing - no date restriction on opening entry
+	erpnext.PointOfSale.Controller.prototype.check_outdated_pos_opening_entry = function () {};
+});
