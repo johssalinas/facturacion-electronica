@@ -142,6 +142,19 @@ def get_invoices(start, end, pos_profile, user):
 	)
 
 	data = {"invoices": invoices, "payments": get_payments(invoices), "taxes": get_taxes(invoices)}
+
+	# Enrich invoices with mode_of_payment for display in the closing entry table
+	for inv in invoices:
+		payments = frappe.get_all(
+			"Sales Invoice Payment",
+			filters={"parent": inv.name, "amount": [">", 0]},
+			fields=["mode_of_payment"],
+			order_by="amount desc",
+		)
+		inv["custom_modo_de_pago"] = ", ".join(
+			list(dict.fromkeys(p.mode_of_payment for p in payments))
+		) if payments else ""
+
 	return data
 
 
