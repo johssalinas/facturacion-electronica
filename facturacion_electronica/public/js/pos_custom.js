@@ -456,3 +456,60 @@ frappe.require("point-of-sale.bundle.js", function () {
 		});
 	};
 });
+
+
+
+// =============================================================================
+// 8. SKIP SUBMIT CONFIRMATION + CART ITEMS NEWEST ON TOP
+// =============================================================================
+
+frappe.require("point-of-sale.bundle.js", function () {
+	if (!erpnext.PointOfSale || !erpnext.PointOfSale.Controller) return;
+
+	var Controller = erpnext.PointOfSale.Controller;
+
+	// Override init_payments to skip the submit confirmation dialog
+	var original_init_payments = Controller.prototype.init_payments;
+	Controller.prototype.init_payments = function () {
+		original_init_payments.call(this);
+
+		// Replace the submit_invoice event to skip confirmation
+		if (this.payment && this.payment.events) {
+			var me = this;
+			this.payment.events.submit_invoice = function () {
+				// Save first, then submit without confirmation
+				me.frm.save().then(function () {
+					frappe.xcall("frappe.client.submit", { doc: me.frm.doc }).then(function (r) {
+						me.frm.doc = r;
+						me.frm.dirty(false);
+						me.toggle_components(false);
+						me.toggle_submitted_invoice_summary(true);
+						frappe.show_alert({
+							indicator: "green",
+							message: __("POS invoice {0} created successfully", [r.name]),
+						});
+					});
+				});
+			};
+		}
+	};
+
+	// Override update_cart_html to prepend new items instead of append
+	var ItemCart = erpnext.PointOfSale.ItemCart;
+	if (ItemCart) {
+		var original_render_cart_item = ItemCart.prototype.render_cart_item;
+		ItemCart.prototype.render_cart_item = function (item_data, $item_to_update) {
+			if (!$item_to_update.length) {
+				// New item: prepend instead of append
+				this.$cart_items_wrapper.prepend(
+					'<div class="cart-item-wrapper" data-row-name="' +
+						frappe.utils.escape_html(item_data.name) +
+						'"></div><div class="seperator"></div>'
+				);
+				$item_to_update = this.get_cart_item(item_data);
+			}
+			// Call original render with the positioned element
+			original_render_cart_item.call(this, item_data, $item_to_update);
+		};
+	}
+});
