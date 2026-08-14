@@ -35,3 +35,19 @@ class CustomSalesInvoice(SalesInvoice):
 				).format(self.pos_profile),
 			)
 		# NOTE: No date check — allow selling across midnight
+
+	def before_submit(self):
+		# Set allow_zero_valuation_rate=1 on every stock item row so the
+		# stock ledger never throws "Valuation Rate Missing" for items that
+		# have no prior stock entries or a zero cost/valuation rate.
+		#
+		# This covers both POS Sales Invoices (POS Settings.invoice_type ==
+		# "Sales Invoice") and regular Sales Invoices with update_stock=1.
+		# The stock ledger checks this flag in check_if_allow_zero_valuation_rate()
+		# before throwing the error.  Using the official ERPNext field means
+		# accounting still posts correctly with a zero valuation rate.
+		for item in self.items:
+			if not item.allow_zero_valuation_rate:
+				item.allow_zero_valuation_rate = 1
+
+		super().before_submit()
