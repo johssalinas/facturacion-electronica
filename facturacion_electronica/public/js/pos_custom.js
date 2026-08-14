@@ -149,6 +149,75 @@ frappe.require("point-of-sale.bundle.js", function () {
 				}, 200);
 			}
 		};
+
+		// ===================================================================
+		// PATCH: Allow items with rate == 0 or undefined to be added to cart.
+		//
+		// ERPNext core (pos_controller.js) blocks adding an item to the cart
+		// when its rate is 0 or undefined, showing "Price is not set for the
+		// item." and returning early.  This prevents selling items that have
+		// no price list entry or a price of $0.
+		//
+		// The check is inside update_item_field (core, line ~685):
+		//   if (rate == undefined || rate == 0) { show_alert; return; }
+		//
+		// Our fix: override update_item_field so that when an item has no
+		// rate we pass rate=0 to force-add it to the cart, bypassing the
+		// early-return.  We do this by patching the item object before the
+		// core executes the check.
+		//
+		// The backend accepts zero-rate items because our CustomPOSInvoice
+		// .before_submit() sets allow_zero_valuation_rate=1 on every item
+		// row before the stock ledger runs.
+		// ===================================================================
+		var _orig_update_item_field = Controller.prototype.update_item_field;
+		Controller.prototype.update_item_field = async function (item, field_or_action, value) {
+			// Only patch the "add new item to cart" path (item_row does NOT exist yet)
+			if (field_or_action !== "checkout") {
+				var item_row = this.get_item_from_frm ? this.get_item_from_frm(item) : null;
+				var is_new_item = !(item_row && item_row.item_code);
+				if (is_new_item && (item.rate == undefined || item.rate == 0)) {
+					// Set rate to 0 explicitly so the core block fires but we set the
+					// item up properly. We also need to neutralize the early-return block.
+					// Strategy: replace the rate on the item object (which is what the core
+					// destructures) with a tiny non-zero value is wrong. Instead, we
+					// directly call our own add-to-cart logic for zero-rate items.
+					if (!this.frm.doc.customer) return this.raise_customer_selection_alert();
+					var { item_code, batch_no, serial_no, uom, stock_uom } = item;
+					if (!item_code) return;
+
+					// Add the item with rate=0 directly, bypassing core check
+					var new_item = { item_code, batch_no, rate: 0, uom, [field_or_action]: value, stock_uom };
+					if (serial_no) {
+						await this.check_serial_no_availablilty(item_code, this.frm.doc.set_warehouse, serial_no);
+						new_item["serial_no"] = serial_no;
+					}
+					new_item["use_serial_batch_fields"] = 1;
+					new_item["warehouse"] = this.settings.warehouse;
+					if (field_or_action === "serial_no") new_item["qty"] = value.split("\n").length || 0;
+
+					var item_row_new = this.frm.add_child("items", new_item);
+
+					if (field_or_action === "qty" && value !== 0 && !this.allow_negative_stock) {
+						var qty_needed = value * item_row_new.conversion_factor;
+						await this.check_stock_availability(item_row_new, qty_needed, this.frm.doc.set_warehouse);
+					}
+
+					await this.trigger_new_item_events(item_row_new);
+					this.update_cart_html(item_row_new);
+
+					if (this.item_details.$component.is(":visible")) this.edit_item_details_of(item_row_new);
+					if (
+						this.check_serial_batch_selection_needed(item_row_new) &&
+						!this.item_details.$component.is(":visible")
+					) {
+						this.edit_item_details_of(item_row_new);
+					}
+					return;
+				}
+			}
+			return _orig_update_item_field.call(this, item, field_or_action, value);
+		};
 	}
 
 	// ===================================================================

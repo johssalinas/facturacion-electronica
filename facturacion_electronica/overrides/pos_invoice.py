@@ -37,6 +37,14 @@ class CustomPOSInvoice(POSInvoice):
 		# NOTE: No date check — allow selling across midnight
 
 	def before_submit(self):
+		# Set allow_zero_valuation_rate=1 on every item so the stock ledger
+		# never throws "Valuation Rate Missing" for items without prior stock
+		# entries or with zero cost.  This is the correct ERPNext mechanism
+		# to allow selling items whose valuation rate is 0 or unknown.
+		for item in self.items:
+			if not item.allow_zero_valuation_rate:
+				item.allow_zero_valuation_rate = 1
+
 		try:
 			super().before_submit()
 		except AttributeError:
