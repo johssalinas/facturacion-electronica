@@ -13,7 +13,7 @@
 
 ### 1.2 Coolify
 - **URL:** http://46.225.227.129:8000 (accesible desde el navegador)
-- **API Token:** `2|WCIlYtdQc0gq8TexAtkPRmWZX6lYc0GwDJlBG3Nl89ba61fd`
+- **API Token:** `6|pWgM0C9LUAorBNFErd7CUFL9LBMaQosdKz67dGmread6523b`
 - **Application UUID:** `vvekd3jmyymltrmfoi8vdbdu`
 - **Deploy via API:**
   ```bash
@@ -553,3 +553,178 @@ P=vvekd3jmyymltrmfoi8vdbdu; for svc in backend scheduler queue-default queue-sho
 ---
 
 *Documento generado el 30 de Junio de 2026. Mantener actualizado ante cambios en credenciales o arquitectura.*
+
+
+---
+
+## 9. Análisis de Cierres de Caja y Mejoras al POS Closing Entry
+
+### 9.1 Análisis de Cierre — 20 de agosto de 2026 (POS-CLO-2026-00019)
+
+#### Problema reportado
+El total general del cierre mostraba **$3.119.086** pero la suma manual de los montos esperados por modo de pago daba **$3.089.796**, una diferencia de **$29.290**.
+
+Cálculo manual que producía la diferencia:
+```
+Monto esperado Efectivo:   2.102.202
+Monto esperado Nequi:        174.284
+Monto esperado Llave:        948.510
+Monto apertura Efectivo:    -135.200
+─────────────────────────────────────
+Total:                     3.089.796   ≠   3.119.086
+```
+
+#### Causa raíz
+ERPNext calcula el `grand_total` del cierre como la **suma de `grand_total` de todas las facturas asignadas**, independientemente de si están pagadas o no. Los `expected_amount` de cada modo de pago, en cambio, sólo reflejan lo que realmente entró a caja (pagos registrados en `tabSales Invoice Payment` menos vueltos más apertura).
+
+La diferencia de $29.290 corresponde exactamente al `outstanding_amount` total de 3 facturas que quedaron dentro del cierre sin estar cobradas:
+
+| Factura | Hora | Total | Cobrado | Pendiente | Estado |
+|---|---|---|---|---|---|
+| ACC-SINV-2026-00917 | 13:20 | $2.500 | $0 | $2.500 | Sin pago — sin registro en `tabSales Invoice Payment` |
+| ACC-SINV-2026-00925 | 17:03 | $10.250 | $0 | $10.250 | Sin pago — sin registro en `tabSales Invoice Payment` |
+| ACC-SINV-2026-00950 | 18:39 | $32.740 | $16.200 (Llave) | $16.540 | Pago parcial |
+
+Verificación: `3.089.796 + 29.290 = 3.119.086 ✓`
+
+#### Cómo se calcula el `expected_amount` de Efectivo
+
+```
+Pagos en efectivo (bruto desde tabSales Invoice Payment):  2.238.294
+Menos vueltos dados (change_amount):                        -271.292
+Efectivo neto del día:                                     1.967.002
+Más fondo de apertura (tabPOS Opening Entry Detail):        +135.200
+─────────────────────────────────────────────────────────────────────
+expected_amount Efectivo:                                  2.102.202  ✓
+```
+
+#### Conclusión
+- El `grand_total` del cierre **incluye facturas sin cobrar** — es el total de ventas generadas, no de caja recaudada.
+- Los `expected_amount` representan **lo que físicamente debería estar en caja**.
+- Las 3 facturas con saldo pendiente están "en la calle" como deuda. Para que el sistema cuadre completamente deben cancelarse, cobrarse o documentarse como crédito a clientes.
+
+---
+
+### 9.2 Mejora: Columna de Estado de Pago y Sin Límite de 50 Filas en el Cierre de Caja
+
+**Fecha de implementación:** 22 de agosto de 2026  
+**Commit:** `d1bf400` — `feat: columna estado de pago y sin limite en tabla del cierre de caja`
+
+#### Problema
+1. La tabla de facturas en el POS Closing Entry sólo mostraba 50 filas (paginación por defecto del grid de Frappe), ocultando el resto de ventas del día.
+2. No había forma de ver directamente en la tabla qué facturas estaban pagadas, sin pagar o con pago parcial — había que abrir cada factura individualmente.
+
+#### Solución implementada
+
+Se modificaron 4 archivos y se agregaron 4 Custom Fields:
+
+##### 9.2.1 `fixtures/custom_field.json`
+Se agregaron los siguientes Custom Fields para que las columnas aparezcan en el grid del POS Closing Entry:
+
+| Doctype | Campo | Tipo | Descripción |
+|---|---|---|---|
+| Sales Invoice Reference | `custom_modo_de_pago` | Data | Modo(s) de pago usados en la factura |
+| Sales Invoice Reference | `custom_estado_pago` | Select | Pagada / Sin Pago / Pago Parcial |
+| POS Invoice Reference | `custom_modo_de_pago` | Data | Modo(s) de pago usados en la factura |
+| POS Invoice Reference | `custom_estado_pago` | Select | Pagada / Sin Pago / Pago Parcial |
+
+Ambos campos tienen `in_list_view: 1` y `columns: 2` para que aparezcan como columnas visibles en el grid.
+
+##### 9.2.2 `overrides/pos_closing_entry.py` — función `get_invoices`
+Se agregó el cálculo de `custom_estado_pago` en el bucle de enriquecimiento, usando `outstanding_amount` de cada factura:
+
+```python
+outstanding = frappe.db.get_value(inv.doctype, inv.name, "outstanding_amount") or 0
+grand_total = inv.get("grand_total") or 0
+if outstanding <= 0:
+    inv["custom_estado_pago"] = "Pagada"
+elif grand_total and outstanding >= grand_total:
+    inv["custom_estado_pago"] = "Sin Pago"
+else:
+    inv["custom_estado_pago"] = "Pago Parcial"
+```
+
+Este enriquecimiento ocurre cuando ERPNext carga las facturas al abrir un cierre nuevo (antes de guardarlo).
+
+##### 9.2.3 `events/pos_closing_entry.py` — función `get_mode_of_payment_map`
+Se cambió la firma de retorno: antes devolvía `{invoice_name: "Efectivo, Llave"}` (string), ahora devuelve:
+
+```python
+{invoice_name: {"modo_de_pago": "Efectivo, Llave", "estado_pago": "Pagada"}}
+```
+
+Se consulta `outstanding_amount` y `grand_total` desde `tabSales Invoice` en la misma llamada, usando la misma lógica de clasificación. Este endpoint es el que usa el JS para refrescar las columnas en cierres ya guardados (docstatus=0).
+
+##### 9.2.4 `public/js/pos_closing_entry.js`
+Dos cambios principales:
+
+**a) Sin límite de 50 filas — función `set_grid_page_length`:**
+```javascript
+function set_grid_page_length(frm) {
+    ["pos_invoices", "sales_invoices"].forEach(function (fieldname) {
+        var field = frm.get_field(fieldname);
+        if (field && field.grid) {
+            field.grid.page_length = 10000;
+            field.grid.refresh();
+        }
+    });
+}
+```
+Se llama en el evento `refresh` (antes que cualquier otra cosa) y también al final de `fill_mode_of_payment` para que el límite no se restaure después del `refresh_field`.
+
+**b) Escritura de `custom_estado_pago` en cada fila:**
+```javascript
+var info = row.sales_invoice && info_map[row.sales_invoice];
+if (info) {
+    row.custom_modo_de_pago = info.modo_de_pago || "";
+    row.custom_estado_pago  = info.estado_pago  || "";
+}
+```
+
+#### Despliegue
+
+```bash
+# 1. Reconstruir imagen custom en el servidor
+docker build -t erpnext-fe:v16.25.0 /root/fe-image/
+docker tag erpnext-fe:v16.25.0 frappe/erpnext:v16.25.0
+
+# 2. Redeploy via Coolify API
+curl -X POST -H "Authorization: Bearer 6|pWgM0C9LUAorBNFErd7CUFL9LBMaQosdKz67dGmread6523b" \
+  "http://localhost:8000/api/v1/applications/vvekd3jmyymltrmfoi8vdbdu/start"
+
+# 3. Migrate para crear los Custom Fields en BD
+BC=$(docker ps -q --filter 'name=backend-vvekd3jmyymltrmfoi8vdbdu')
+docker exec $BC bash -lc 'cd /home/frappe/frappe-bench && bench --site salsamentariamultiespecial.duckdns.org migrate'
+
+# 4. Clear cache
+docker exec $BC bash -lc 'cd /home/frappe/frappe-bench && bench --site salsamentariamultiespecial.duckdns.org clear-cache'
+```
+
+#### Resultado
+- La tabla del cierre de caja muestra **todas las facturas** sin paginación de 50.
+- Dos columnas nuevas visibles: **Modo de Pago** y **Estado**.
+- Las facturas sin cobrar o con pago parcial quedan identificadas visualmente de inmediato, sin necesidad de abrir cada una.
+
+---
+
+### 9.3 Referencia: Lógica de Totales del Cierre de Caja
+
+Esta sección explica cómo ERPNext construye cada número del cierre para facilitar futuros análisis.
+
+| Campo | Cómo se calcula |
+|---|---|
+| `grand_total` del cierre | `SUM(grand_total)` de todas las facturas asignadas, incluidas las sin pagar |
+| `expected_amount` Efectivo | `SUM(SIP.amount WHERE modo=Efectivo)` − `SUM(change_amount)` + `opening_amount Efectivo` |
+| `expected_amount` Nequi/Llave | `SUM(SIP.amount WHERE modo=X)` (sin descuento de vueltos ni apertura) |
+| `opening_amount` | Viene de `tabPOS Opening Entry Detail` para el `pos_opening_entry` del cierre |
+| Dinero físico esperado en caja | `SUM(expected_amount)` − `SUM(opening_amount)` = ventas netas cobradas del día |
+| Facturas sin cobrar | `SUM(outstanding_amount)` de las facturas del cierre con `outstanding_amount > 0` |
+
+**Fórmula de cuadre:**
+```
+grand_total del cierre
+= dinero cobrado del día (expected_amount neto sin apertura)
++ outstanding_amount pendiente (facturas sin cobrar)
+```
+
+Si `grand_total ≠ sum(expected_amount) - opening_amount`, la diferencia son **ventas registradas pero no cobradas** en ese cierre.
