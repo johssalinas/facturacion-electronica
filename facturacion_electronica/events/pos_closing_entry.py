@@ -101,7 +101,7 @@ def enviar_pendientes_fe(name):
 
 @frappe.whitelist()
 def get_mode_of_payment_map(invoice_names):
-	"""Return a dict mapping invoice name -> mode of payment string."""
+	"""Return a dict mapping invoice name -> {modo_de_pago, estado_pago}."""
 	import json
 	if isinstance(invoice_names, str):
 		invoice_names = json.loads(invoice_names)
@@ -109,6 +109,7 @@ def get_mode_of_payment_map(invoice_names):
 	if not invoice_names:
 		return {}
 
+	# Fetch payments grouped by invoice
 	payments = frappe.db.sql("""
 		SELECT parent, mode_of_payment, amount
 		FROM `tabSales Invoice Payment`
@@ -123,4 +124,30 @@ def get_mode_of_payment_map(invoice_names):
 		if p.mode_of_payment not in mop_map[p.parent]:
 			mop_map[p.parent].append(p.mode_of_payment)
 
-	return {k: ", ".join(v) for k, v in mop_map.items()}
+	# Fetch outstanding_amount to compute payment status
+	outstanding_rows = frappe.db.sql("""
+		SELECT name, grand_total, outstanding_amount
+		FROM `tabSales Invoice`
+		WHERE name IN %(names)s
+	""", {"names": invoice_names}, as_dict=True)
+
+	outstanding_map = {r.name: r for r in outstanding_rows}
+
+	result = {}
+	for name in invoice_names:
+		mop = ", ".join(mop_map.get(name, []))
+		row = outstanding_map.get(name)
+		if row:
+			outstanding = row.outstanding_amount or 0
+			grand_total = row.grand_total or 0
+			if outstanding <= 0:
+				estado = "Pagada"
+			elif grand_total and outstanding >= grand_total:
+				estado = "Sin Pago"
+			else:
+				estado = "Pago Parcial"
+		else:
+			estado = "Pagada"
+		result[name] = {"modo_de_pago": mop, "estado_pago": estado}
+
+	return result

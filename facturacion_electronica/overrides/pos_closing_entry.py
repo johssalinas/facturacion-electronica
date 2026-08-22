@@ -143,7 +143,7 @@ def get_invoices(start, end, pos_profile, user):
 
 	data = {"invoices": invoices, "payments": get_payments(invoices), "taxes": get_taxes(invoices)}
 
-	# Enrich invoices with mode_of_payment for display in the closing entry table
+	# Enrich invoices with mode_of_payment and payment status for display in the closing entry table
 	for inv in invoices:
 		payments = frappe.get_all(
 			"Sales Invoice Payment",
@@ -154,6 +154,16 @@ def get_invoices(start, end, pos_profile, user):
 		inv["custom_modo_de_pago"] = ", ".join(
 			list(dict.fromkeys(p.mode_of_payment for p in payments))
 		) if payments else ""
+
+		# Determine payment status from outstanding_amount
+		outstanding = frappe.db.get_value(inv.doctype, inv.name, "outstanding_amount") or 0
+		grand_total = inv.get("grand_total") or 0
+		if outstanding <= 0:
+			inv["custom_estado_pago"] = "Pagada"
+		elif grand_total and outstanding >= grand_total:
+			inv["custom_estado_pago"] = "Sin Pago"
+		else:
+			inv["custom_estado_pago"] = "Pago Parcial"
 
 	return data
 

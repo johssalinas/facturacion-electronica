@@ -59,7 +59,10 @@ function fe_cerrar_actualizar(frm) {
 }
 
 frappe.ui.form.on("POS Closing Entry", {
-	refresh: fe_cerrar_actualizar,
+	refresh: function (frm) {
+		set_grid_page_length(frm);
+		fe_cerrar_actualizar(frm);
+	},
 
 	// After invoices are loaded, fill mode_of_payment in each row
 	pos_opening_entry: function (frm) {
@@ -70,6 +73,17 @@ frappe.ui.form.on("POS Closing Entry", {
 		}, 2000);
 	}
 });
+
+function set_grid_page_length(frm) {
+	// Remove the default 50-row pagination from both child tables
+	["pos_invoices", "sales_invoices"].forEach(function (fieldname) {
+		var field = frm.get_field(fieldname);
+		if (field && field.grid) {
+			field.grid.page_length = 10000;
+			field.grid.refresh();
+		}
+	});
+}
 
 function fill_mode_of_payment(frm) {
 	// Collect all invoice names from both tables
@@ -83,27 +97,37 @@ function fill_mode_of_payment(frm) {
 
 	if (!invoices.length) return;
 
+	// Remove pagination limit before filling rows
+	set_grid_page_length(frm);
+
 	frappe.call({
 		method: "facturacion_electronica.events.pos_closing_entry.get_mode_of_payment_map",
 		args: { invoice_names: invoices },
 		async: true,
 		callback: function (r) {
 			if (!r || !r.message) return;
-			var mop_map = r.message;
+			var info_map = r.message;
 
 			(frm.doc.pos_invoices || []).forEach(function (row) {
-				if (row.pos_invoice && mop_map[row.pos_invoice]) {
-					row.custom_modo_de_pago = mop_map[row.pos_invoice];
+				var info = row.pos_invoice && info_map[row.pos_invoice];
+				if (info) {
+					row.custom_modo_de_pago = info.modo_de_pago || "";
+					row.custom_estado_pago  = info.estado_pago  || "";
 				}
 			});
 			(frm.doc.sales_invoices || []).forEach(function (row) {
-				if (row.sales_invoice && mop_map[row.sales_invoice]) {
-					row.custom_modo_de_pago = mop_map[row.sales_invoice];
+				var info = row.sales_invoice && info_map[row.sales_invoice];
+				if (info) {
+					row.custom_modo_de_pago = info.modo_de_pago || "";
+					row.custom_estado_pago  = info.estado_pago  || "";
 				}
 			});
 
 			frm.refresh_field("pos_invoices");
 			frm.refresh_field("sales_invoices");
+
+			// Ensure pagination limit stays removed after refresh
+			set_grid_page_length(frm);
 		}
 	});
 }
