@@ -7,9 +7,6 @@ function fe_cerrar_actualizar(frm) {
 		return;
 	}
 
-	// Fill mode of payment column
-	fill_mode_of_payment(frm);
-
 	frappe.call({
 		method: "facturacion_electronica.events.pos_closing_entry.get_pendientes_fe",
 		args: { name: frm.doc.name },
@@ -61,6 +58,11 @@ function fe_cerrar_actualizar(frm) {
 frappe.ui.form.on("POS Closing Entry", {
 	refresh: function (frm) {
 		set_grid_page_length(frm);
+		// Fill Modo de Pago / Estado for EVERY closing on display, including
+		// submitted (old) closings whose saved rows predate those custom fields.
+		if (!frm.is_new()) {
+			fill_mode_of_payment(frm);
+		}
 		fe_cerrar_actualizar(frm);
 	},
 
