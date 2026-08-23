@@ -834,3 +834,45 @@ done
 ```
 
 > **Nota sobre la caché del usuario:** El `__js` se entrega por la API `getdoctype` con `Cache-Control: no-store`, así que el navegador no lo cachea por HTTP. El comportamiento de "recién aparece tras Ctrl+Shift+R" se debía a la caché del servidor (resuelta con `clear-cache`). Un usuario con la pestaña/sesión abierta de antes del deploy puede necesitar **una** recarga para tomar el JS nuevo; a partir de ahí funciona a la primera.
+
+---
+
+### 9.5 Fix: columna Estado vacía en cierres de caja antiguos (sometidos)
+
+**Fecha de implementación:** 23 de agosto de 2026  
+**Commit:** `c945f48` — `fix: llenar columnas Modo de Pago y Estado en cierres de caja ya sometidos`
+
+#### Problema
+- En un cierre **nuevo**, la columna **Estado** (Pagada / Sin Pago / Pago Parcial) sí aparece con valores.
+- En un cierre **antiguo / ya sometido** (docstatus=1), la columna **Estado** aparecía **vacía** (el encabezado sí existe, pero sin valores en las filas).
+
+#### Causa raíz
+- `fe_cerrar_actualizar` hacía `if (frm.doc.docstatus !== 0) return;` **antes** de llamar `fill_mode_of_payment`. Por lo tanto, en cierres sometidos **nunca** se ejecutaba el llenado en vivo de `custom_modo_de_pago` / `custom_estado_pago`.
+- En cierres creados **antes** de los Custom Fields (commit `d1bf400`, 22-ago), las filas guardadas no tienen `custom_estado_pago` (y los más viejos tampoco `custom_modo_de_pago`). Como el valor no está en la BD, la columna quedaba vacía.
+- En cierres nuevos, `fill_mode_of_payment` corre al crear el cierre y guarda los valores, por eso sí aparecían.
+
+#### Solución
+Se movió la llamada a `fill_mode_of_payment(frm)` de `fe_cerrar_actualizar` al handler `refresh`, de modo que corre para **todo** cierre guardado (borrador y sometido), recalculando Estado y Modo de Pago **en vivo** desde las facturas cada vez que se abre:
+
+```javascript
+frappe.ui.form.on("POS Closing Entry", {
+	refresh: function (frm) {
+		set_grid_page_length(frm);
+		if (!frm.is_new()) {
+			fill_mode_of_payment(frm);
+		}
+		fe_cerrar_actualizar(frm);
+	},
+	...
+});
+```
+
+`fe_cerrar_actualizar` queda sólo con la lógica de pendientes DIAN (sigue siendo sólo para docstatus=0).
+
+#### Verificación en producción (navegador real)
+| Cierre (sometido) | Filas | Estado lleno | Modo de Pago lleno |
+|---|---|---|---|
+| POS-CLO-2026-00020 (85 facturas) | 85 | 85 (todas) | 85 |
+| POS-CLO-2026-00012 (37 facturas) | 37 | 37 (todas) | 36 (la "Sin Pago" no tiene medio) |
+
+Sin errores de consola. Aplica el mismo proceso de despliegue del 9.4 (reconstruir imagen con `--no-cache`, redeploy, `clear-cache`, reiniciar).
