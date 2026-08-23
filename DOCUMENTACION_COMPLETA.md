@@ -664,6 +664,9 @@ function set_grid_page_length(frm) {
     ["pos_invoices", "sales_invoices"].forEach(function (fieldname) {
         var field = frm.get_field(fieldname);
         if (field && field.grid) {
+            if (field.grid.grid_pagination) {
+                field.grid.grid_pagination.page_length = 10000;
+            }
             field.grid.page_length = 10000;
             field.grid.refresh();
         }
@@ -671,6 +674,8 @@ function set_grid_page_length(frm) {
 }
 ```
 Se llama en el evento `refresh` (antes que cualquier otra cosa) y también al final de `fill_mode_of_payment` para que el límite no se restaure después del `refresh_field`.
+
+> **⚠️ Nota (importante):** En Frappe v15+ la paginación del grid ya **no** se guarda en `grid.page_length`, sino en `grid.grid_pagination.page_length`. La versión original de este commit sólo seteaba `grid.page_length`, que en v16 era un **no-op**: el límite de 50 seguía activo. La versión corregida (commit `0b1caa7`, sección 9.4) setea ambos campos, por eso el "sin límite" ahora sí funciona.
 
 **b) Escritura de `custom_estado_pago` en cada fila:**
 ```javascript
@@ -728,3 +733,104 @@ grand_total del cierre
 ```
 
 Si `grand_total ≠ sum(expected_amount) - opening_amount`, la diferencia son **ventas registradas pero no cobradas** en ese cierre.
+
+---
+
+### 9.4 Fix: el "sin límite de 50 filas" no funcionaba en Frappe v16 + problema de caché
+
+**Fecha de implementación:** 23 de agosto de 2026  
+**Commit:** `0b1caa7` — `fix: quitar limite de 50 filas en tabla del cierre de caja (compat Frappe v16 grid_pagination)`
+
+#### Problema reportado
+1. La tabla de facturas del cierre seguía mostrando sólo 50 filas (con paginador) tanto al **ver un cierre guardado** como al **crear un cierre nuevo** — a pesar del cambio 9.2.
+2. Al hacer deploy, los cambios de JS no aparecían "a la primera": había que hacer `Ctrl+Shift+R` (recargar con limpieza de caché).
+
+#### Causa raíz
+1. **El `set_grid_page_length` era un no-op en Frappe v16.** Desde Frappe v15+, la paginación del grid se guarda en `grid.grid_pagination.page_length` (clase `GridPagination`, default 50), **no** en `grid.page_length`. Setear `grid.page_length = 10000` no afectaba nada.
+   - Verificado empíricamente en producción (Frappe 16.24.3): con el código anterior, `grid_pagination.page_length` seguía en 50, `total_pages = 2` y se renderizaban sólo 50 filas con paginador (5 botones).
+2. **Al crear un cierre nuevo**, las facturas se cargan de forma asíncrona (`get_invoices` → `freeze` → `add_child` → `refresh_field`). El `setTimeout` fijo de 2s en el handler `pos_opening_entry` podía ejecutarse antes de que existieran filas; `fill_mode_of_payment` retornaba temprano y nunca se volvía a aplicar el sin-límite.
+3. **Caché:** el JS del doctype se entrega dentro de la respuesta de `getdoctype` (campo `__js`), que Frappe cachea en redis (`doctype_form_meta::<doctype>`, ClientCache con TTL 10 min). Tras un deploy, el servidor seguía sirviendo el `__js` viejo hasta `bench clear-cache`.
+
+#### Solución implementada
+
+En `facturacion_electronica/public/js/pos_closing_entry.js`:
+
+**a) `set_grid_page_length` compatible con v15+** — setea ambos campos:
+```javascript
+function set_grid_page_length(frm) {
+	["pos_invoices", "sales_invoices"].forEach(function (fieldname) {
+		var field = frm.get_field(fieldname);
+		if (field && field.grid) {
+			if (field.grid.grid_pagination) {
+				field.grid.grid_pagination.page_length = 10000;
+			}
+			field.grid.page_length = 10000;
+			field.grid.refresh();
+		}
+	});
+}
+```
+
+**b) Esperar a que las facturas carguen en un cierre nuevo** — nuevo handler `pos_opening_entry` que hace polling (cada 500ms, máx 30s) hasta que `get_invoices` termine de poblar las tablas, y recién ahí aplica el sin-límite y llena las columnas Modo de Pago / Estado:
+```javascript
+pos_opening_entry: function (frm) {
+	apply_when_invoices_loaded(frm);
+}
+
+function has_invoices(frm) {
+	return (frm.doc.pos_invoices || []).length > 0 || (frm.doc.sales_invoices || []).length > 0;
+}
+
+function apply_when_invoices_loaded(frm) {
+	var attempts = 0;
+	var apply = function () {
+		attempts++;
+		set_grid_page_length(frm);
+		if (has_invoices(frm) || attempts > 60) {
+			fill_mode_of_payment(frm);
+			return;
+		}
+		setTimeout(apply, 500);
+	};
+	setTimeout(apply, 500);
+}
+```
+
+#### Verificación en producción (con navegador real, Frappe 16.24.3)
+| Escenario | Filas en la tabla | `grid_pagination.page_length` | Filas renderizadas | Paginador |
+|---|---|---|---|---|
+| Cierre guardado (85 facturas) | 85 | 10000 | 85 (todas) | No |
+| Cierre nuevo (93 facturas) | 93 | 10000 | 93 (todas) | No |
+
+Sin errores de consola. Antes del fix: 50 filas, paginador de 2 páginas.
+
+#### Despliegue (incluye limpieza de caché obligatoria)
+```bash
+# 1. Reconstruir imagen custom (--no-cache para forzar git clone nuevo)
+cd /root/fe-image && docker build --no-cache -t erpnext-fe:v16.25.0 .
+docker tag erpnext-fe:v16.25.0 frappe/erpnext:v16.25.0
+
+# 2. Redeploy via Coolify API
+curl -X POST -H "Authorization: Bearer 6|pWgM0C9LUAorBNFErd7CUFL9LBMaQosdKz67dGmread6523b" \
+  "http://localhost:8000/api/v1/applications/vvekd3jmyymltrmfoi8vdbdu/start"
+
+# 3. Migrate (solo si cambió BD; para JS no es necesario, pero no daña)
+BC=$(docker ps -q --filter 'name=backend-vvekd3jmyymltrmfoi8vdbdu')
+docker exec $BC bash -lc 'cd /home/frappe/frappe-bench && bench --site salsamentariamultiespecial.duckdns.org migrate'
+
+# 4. Clear cache — OBLIGATORIO: invalida doctype_form_meta::* (el __js viejo queda cacheado)
+docker exec $BC bash -lc 'cd /home/frappe/frappe-bench && bench --site salsamentariamultiespecial.duckdns.org clear-cache'
+
+# 5. Reiniciar servicios
+for svc in backend scheduler queue-default queue-short queue-long; do
+  cid=$(docker ps -q --filter "name=$svc-vvekd3jmyymltrmfoi8vdbdu" | head -1)
+  [ -n "$cid" ] && docker restart "$cid" >/dev/null
+done
+sleep 8
+for svc in frontend websocket; do
+  cid=$(docker ps -q --filter "name=$svc-vvekd3jmyymltrmfoi8vdbdu" | head -1)
+  [ -n "$cid" ] && docker restart "$cid" >/dev/null
+done
+```
+
+> **Nota sobre la caché del usuario:** El `__js` se entrega por la API `getdoctype` con `Cache-Control: no-store`, así que el navegador no lo cachea por HTTP. El comportamiento de "recién aparece tras Ctrl+Shift+R" se debía a la caché del servidor (resuelta con `clear-cache`). Un usuario con la pestaña/sesión abierta de antes del deploy puede necesitar **una** recarga para tomar el JS nuevo; a partir de ahí funciona a la primera.
