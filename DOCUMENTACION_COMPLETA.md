@@ -876,3 +876,39 @@ frappe.ui.form.on("POS Closing Entry", {
 | POS-CLO-2026-00012 (37 facturas) | 37 | 37 (todas) | 36 (la "Sin Pago" no tiene medio) |
 
 Sin errores de consola. Aplica el mismo proceso de despliegue del 9.4 (reconstruir imagen con `--no-cache`, redeploy, `clear-cache`, reiniciar).
+
+---
+
+### 9.6 Fix: el carrito del POS debe mostrar el total (precio unitario × cantidad) por producto
+
+**Fecha de implementación:** 23 de agosto de 2026  
+**Commit:** `d112e8c` — `fix: POS carrito muestra el total (precio unitario x cantidad) por producto`
+
+#### Problema
+En el carrito del POS, cuando un producto tenía cantidad > 1, no se veía claramente el **total de la línea** (`precio unitario × cantidad`); el usuario reportaba que sólo aparecía el precio unitario.
+
+#### Causa raíz
+El render del carrito de ERPNext (`ItemCart.render_cart_item` en `point-of-sale.bundle.js`) sólo imprime el total cuando `item.amount != item.rate`. Si `amount` no está calculado/actualizado (por ejemplo, cuando la cantidad cambia por el input del carrito, la báscula u otro flujo), `rate === amount` y el carrito queda mostrando **sólo el precio unitario**.
+
+#### Solución
+En `facturacion_electronica/public/js/pos_custom.js` se sobreescribió `render_cart_item` para que, después de renderizar, **recalcule siempre** `total = qty × rate` y lo muestre en `.item-rate` (en negrita), más el desglose en `.item-amount` como `"precio unitario x cantidad"`:
+
+```javascript
+// Muestra SIEMPRE el total de la línea
+var total = flt(item.qty) * flt(item.rate);
+$rate.html(format_currency(total, currency));
+if ($amount.length) {
+    $amount.html(format_currency(rate, currency) + " x " + qty);
+}
+```
+
+Resultado visual con qty=5 y precio $4.000:
+```
+$ 20.000,00      (total, en negrita)
+$ 4.000,00 x 5   (desglose precio unitario x cantidad)
+```
+
+También se re-alinea el ancho de la columna de precios tras el cambio de contenido.
+
+#### Despliegue
+Mismo proceso del 9.4: reconstruir imagen con `--no-cache`, redeploy via Coolify, `bench clear-cache`, reiniciar servicios. El script del POS se entrega vía `frappe.desk.desk_page.getpage` (campo `script`), así que tras el deploy el usuario puede necesitar **una** recarga de la página del POS para tomar el JS nuevo.
