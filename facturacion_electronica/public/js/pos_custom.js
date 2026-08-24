@@ -654,3 +654,157 @@ frappe.require("point-of-sale.bundle.js", function () {
 		disable_outdated_check();
 	});
 })();
+
+
+// =============================================================================
+// 10. SALIDA DE DINERO (registro de salida de caja desde el POS)
+// Agrega la opcion "Salida de Dinero" al menu (tres puntos) del POS para que
+// el cajero registre pagos en efectivo a proveedores u otros egresos sin salir
+// del POS. Al guardar se crea y somete un documento "Salida de Dinero" que:
+//   - Crea un Journal Entry (credito a caja, debito a la cuenta seleccionada)
+//   - Se refleja en el cierre de caja reduciendo el efectivo esperado
+// =============================================================================
+
+frappe.require("point-of-sale.bundle.js", function () {
+	if (!erpnext.PointOfSale || !erpnext.PointOfSale.Controller) return;
+
+	var Controller = erpnext.PointOfSale.Controller;
+
+	// Add the menu option next to "Open Form View" / "Close the POS"
+	var original_prepare_menu = Controller.prototype.prepare_menu;
+	Controller.prototype.prepare_menu = function () {
+		original_prepare_menu.call(this);
+		if (this.page && this.page.add_menu_item) {
+			this.page.add_menu_item(__("Salida de Dinero"), function () {
+				open_salida_de_dinero_dialog(this);
+			}.bind(this), false, "Ctrl+Shift+M");
+		}
+	};
+
+	function get_pos_payment_modes(pos) {
+		// Return the mode-of-payment list from the POS profile settings
+		var modes = [];
+		(pos.settings && pos.settings.payments || []).forEach(function (p) {
+			if (p.mode_of_payment) modes.push(p.mode_of_payment);
+		});
+		return modes;
+	}
+
+	function open_salida_de_dinero_dialog(pos) {
+		if (!pos.pos_opening) {
+			frappe.msgprint(__("Debe tener una caja abierta para registrar una salida de dinero."));
+			return;
+		}
+
+		var modes = get_pos_payment_modes(pos);
+		var currency = pos.frm.doc.currency;
+
+		var dialog = new frappe.ui.Dialog({
+			title: __("Salida de Dinero"),
+			fields: [
+				{
+					fieldname: "mode_of_payment",
+					fieldtype: "Link",
+					options: "Mode of Payment",
+					label: __("Modo de Pago"),
+					reqd: 1,
+					default: modes[0] || "",
+					get_query: function () {
+						return { filters: { name: ["in", modes] } };
+					},
+				},
+				{
+					fieldname: "amount",
+					fieldtype: "Currency",
+					label: __("Monto"),
+					reqd: 1,
+					options: currency,
+					default: 0,
+				},
+				{
+					fieldname: "col_break",
+					fieldtype: "Column Break",
+				},
+				{
+					fieldname: "party_type",
+					fieldtype: "Select",
+					label: __("Tipo de Tercero"),
+					options: ["", "Supplier", "Customer", "Employee"],
+					default: "",
+				},
+				{
+					fieldname: "party",
+					fieldtype: "Dynamic Link",
+					label: __("Tercero (Proveedor / Cliente)"),
+					options: "party_type",
+					depends_on: "eval:doc.party_type",
+				},
+				{
+					fieldname: "description",
+					fieldtype: "Small Text",
+					label: __("Motivo / Descripcion"),
+					placeholder: __("Ej: Pago a proveedor, gasto de transporte, etc."),
+				},
+				{
+					fieldname: "ref_no",
+					fieldtype: "Data",
+					label: __("Referencia / Documento"),
+				},
+				{
+					fieldname: "debit_account",
+					fieldtype: "Link",
+					options: "Account",
+					label: __("Cuenta a Debitar (opcional)"),
+					description: __("Si se selecciona un proveedor se debita su cuenta por pagar. Si no, se usa la cuenta de gasto por defecto."),
+				},
+			],
+			primary_action_label: __("Registrar"),
+			primary_action: function (values) {
+				if (!values.amount || values.amount <= 0) {
+					frappe.msgprint(__("Ingrese un monto mayor a cero."));
+					return;
+				}
+				dialog.disable_primary_action();
+
+				var doc = {
+					doctype: "Salida de Dinero",
+					pos_opening_entry: pos.pos_opening,
+					posting_date: frappe.datetime.nowdate(),
+					posting_time: frappe.datetime.now_time(),
+					mode_of_payment: values.mode_of_payment,
+					amount: values.amount,
+					party_type: values.party_type || "",
+					party: values.party || "",
+					debit_account: values.debit_account || "",
+					description: values.description || "",
+					ref_no: values.ref_no || "",
+					create_accounting_entry: 1,
+				};
+
+				frappe.xcall("frappe.client.insert", { doc: doc })
+					.then(function (saved_doc) {
+						return frappe.xcall("frappe.client.submit", { doc: saved_doc });
+					})
+					.then(function (submitted) {
+						dialog.hide();
+						frappe.show_alert({
+							message: __("Salida de dinero registrada: {0}", [submitted.name]),
+							indicator: "green",
+						}, 5);
+						frappe.utils.play_sound("submit");
+					})
+					.catch(function (e) {
+						dialog.enable_primary_action();
+						frappe.msgprint({
+							title: __("Error al registrar salida de dinero"),
+							message: (e && e._server_messages) ? e._server_messages.join("<br>") : (e && e.message) || e,
+							indicator: "red",
+						});
+					});
+			},
+		});
+
+		dialog.show();
+		dialog.get_field("party_type").$input.change();
+	}
+});

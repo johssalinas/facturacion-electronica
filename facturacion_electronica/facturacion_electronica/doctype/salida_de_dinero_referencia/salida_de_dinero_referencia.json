@@ -1,0 +1,58 @@
+{
+ "actions": [],
+ "creation": "2026-08-23 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "salida_de_dinero",
+  "mode_of_payment",
+  "amount",
+  "description",
+  "party"
+ ],
+ "fields": [
+  {
+   "fieldname": "salida_de_dinero",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Salida de Dinero",
+   "options": "Salida de Dinero"
+  },
+  {
+   "fieldname": "mode_of_payment",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Modo de Pago",
+   "options": "Mode of Payment"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Monto"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Motivo"
+  },
+  {
+   "fieldname": "party",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Tercero"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-08-23 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Facturacion Electronica",
+ "name": "Salida de Dinero Referencia",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC"
+}

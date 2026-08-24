@@ -1,5 +1,6 @@
 import frappe
 from frappe import _
+from frappe.utils import flt
 from frappe.query_builder import DocType
 from frappe.query_builder import functions as fn
 from frappe.query_builder.custom import ConstantColumn
@@ -143,6 +144,17 @@ def get_invoices(start, end, pos_profile, user):
 
 	data = {"invoices": invoices, "payments": get_payments(invoices), "taxes": get_taxes(invoices)}
 
+	# Deduct "Salida de Dinero" (cash outflows) posted during the period so the
+	# expected cash in the register reflects money that left the cash drawer
+	# (e.g. supplier paid in cash).
+	salidas = _get_salidas_de_dinero(start, end, pos_profile)
+	if salidas:
+		for p in data["payments"]:
+			salida_total = salidas.get(p.mode_of_payment, 0)
+			if salida_total:
+				p["amount"] = flt(p["amount"]) - flt(salida_total)
+		data["salidas_de_dinero"] = _salidas_to_list(salidas)
+
 	# Enrich invoices with mode_of_payment and payment status for display in the closing entry table
 	for inv in invoices:
 		payments = frappe.get_all(
@@ -166,6 +178,73 @@ def get_invoices(start, end, pos_profile, user):
 			inv["custom_estado_pago"] = "Pago Parcial"
 
 	return data
+
+
+def _get_salidas_de_dinero(start, end, pos_profile):
+	"""Return {mode_of_payment: total_amount} of submitted Salida de Dinero in the period."""
+	filters = {
+		"docstatus": 1,
+		"posting_date": [">=", frappe.utils.getdate(start)],
+	}
+	# match by period timestamp when possible
+	rows = frappe.get_all(
+		"Salida de Dinero",
+		filters=filters,
+		fields=["mode_of_payment", "amount", "posting_date", "posting_time"],
+	)
+	if not rows:
+		return {}
+
+	start_dt = _to_datetime(start)
+	end_dt = _to_datetime(end)
+
+	salidas = {}
+	for r in rows:
+		ts = _to_datetime(f"{r.posting_date} {r.posting_time or '00:00:00'}")
+		if start_dt and end_dt and not (start_dt <= ts <= end_dt):
+			continue
+		salidas[r.mode_of_payment] = flt(salidas.get(r.mode_of_payment, 0)) + flt(r.amount)
+
+	return salidas
+
+
+def _to_datetime(value):
+	try:
+		return frappe.utils.get_datetime(value)
+	except Exception:
+		return None
+
+
+def _salidas_to_list(salidas):
+	return [{"mode_of_payment": k, "amount": v} for k, v in sorted(salidas.items())]
+
+
+@frappe.whitelist()
+def get_salidas_de_dinero(name):
+	"""Return the submitted Salida de Dinero docs for a POS Closing Entry or a
+	POS Opening Entry (name can be either)."""
+	opening = name
+	if frappe.db.exists("POS Closing Entry", name):
+		opening = frappe.db.get_value("POS Closing Entry", name, "pos_opening_entry")
+	if not opening or not frappe.db.exists("POS Opening Entry", opening):
+		return []
+
+	rows = frappe.get_all(
+		"Salida de Dinero",
+		filters={"docstatus": 1, "pos_opening_entry": opening},
+		fields=[
+			"name",
+			"posting_date",
+			"posting_time",
+			"mode_of_payment",
+			"amount",
+			"description",
+			"party",
+			"ref_no",
+		],
+		order_by="creation asc",
+	)
+	return rows
 
 
 def _build_shared_invoice_query(invoice_doctype, pos_profile, start, end):

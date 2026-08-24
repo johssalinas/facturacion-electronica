@@ -63,6 +63,7 @@ frappe.ui.form.on("POS Closing Entry", {
 		if (!frm.is_new()) {
 			fill_mode_of_payment(frm);
 		}
+		fill_salidas_de_dinero(frm);
 		fe_cerrar_actualizar(frm);
 	},
 
@@ -73,8 +74,35 @@ frappe.ui.form.on("POS Closing Entry", {
 	// whole table is visible right away.
 	pos_opening_entry: function (frm) {
 		apply_when_invoices_loaded(frm);
+		fill_salidas_de_dinero(frm);
 	}
 });
+
+function fill_salidas_de_dinero(frm) {
+	if (!frm.doc.pos_opening_entry) return;
+	frappe.call({
+		method: "facturacion_electronica.overrides.pos_closing_entry.get_salidas_de_dinero",
+		args: { name: frm.doc.pos_opening_entry },
+		callback: function (r) {
+			if (!r || !r.message) return;
+			var salidas = r.message;
+			frm.doc.salidas_de_dinero = [];
+			(salidas || []).forEach(function (s) {
+				var row = frappe.model.add_child(
+					frm.doc,
+					"Salida de Dinero Referencia",
+					"salidas_de_dinero"
+				);
+				row.salida_de_dinero = s.name;
+				row.mode_of_payment = s.mode_of_payment;
+				row.amount = s.amount;
+				row.description = s.description || "";
+				row.party = s.party || "";
+			});
+			frm.refresh_field("salidas_de_dinero");
+		}
+	});
+}
 
 function set_grid_page_length(frm) {
 	// Remove the default 50-row pagination from both child tables.
