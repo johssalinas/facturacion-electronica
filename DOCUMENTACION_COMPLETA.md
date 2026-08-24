@@ -946,3 +946,33 @@ Desde el POS, el cajero puede abrir el menú (tres puntos) → **"Salida de Dine
 - Datos de prueba eliminados al terminar.
 
 > **Nota de despliegue:** requiere `bench migrate` para crear los doctypes + custom field y `clear-cache`. Si `get_controller` falla por nombre de clase, el migrate borra el doctype como huérfano; verificar el nombre de la clase.
+
+---
+
+### 9.8 Impresión del Cierre de Caja en formato recibo con detalle del día
+
+**Fecha de implementación:** 24 de agosto de 2026  
+**Commit:** `2dcfcfb`
+
+#### Qué hace
+La impresión del **POS Closing Entry** ahora usa el formato **"Cierre de Caja SM"**, con el mismo estilo del recibo de venta (**"Recibo POS SM"**: Courier, negritas, 80mm, encabezado de la empresa, separadores punteados), e incluye el detalle completo del día:
+
+1. **Encabezado**: empresa, NIT, teléfono.
+2. **Datos del cierre**: número, fecha/hora, cajero, punto de venta, apertura, periodo.
+3. **Resumen de caja** (`payment_reconciliation`): por cada modo de pago → Apertura, Esperado, Contado, Diferencia.
+4. **Salidas de Dinero**: documento, modo, monto y motivo (sólo si las hay).
+5. **Detalle de ventas**: por cada factura del día → número, cliente, fecha, pago/estado, tabla de productos (producto, cantidad, precio, total), subtotal, IVA separado (por tarifa) y total de la factura.
+6. **Totales del día**: subtotal (neto), impuestos (IVA), total de ventas, y total de salidas de dinero.
+
+#### Cómo se implementó
+- **Print Format custom** `Cierre de Caja SM` (Jinja, `custom_format=1`) para `POS Closing Entry` en `facturacion_electronica/print_format/cierre_de_caja_sm/cierre_de_caja_sm.json`.
+  - El template lee los ítems e impuestos de cada factura con `frappe.db.get_all("Sales Invoice Item" / "Sales Taxes and Charges", filters={"parent": inv_name})`.
+  - Usa `doc.salidas_de_dinero` (la tabla custom de Salida de Dinero Referencia) para la sección de salidas.
+  - **Importante:** un Print Format custom necesita `custom_format=1`; si falta, el render cae al formato Standard.
+- **Patch `v0_0_5.crear_impresion_cierre_caja`**: crea/actualiza el Print Format (leyendo el JSON del app) y establece `default_print_format = "Cierre de Caja SM"` en el DocType POS Closing Entry, de modo que el botón **Imprimir** del cierre usa este formato.
+
+#### Verificación (producción, navegador real)
+- Print preview de un cierre con 85 facturas muestra: encabezado, resumen de caja por modo (Efectivo/Nequi/Llave), cada factura con sus productos y **IVA 19% separado** por factura, y totales del día.
+- Sección de Salidas de Dinero verificada con un cierre de prueba (montos listados).
+
+> **Despliegue:** imagen + `bench migrate` (corre el patch) + `clear-cache` + reiniciar servicios. El botón Imprimir del cierre ya usa el nuevo formato por ser el `default_print_format`.
