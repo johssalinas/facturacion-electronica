@@ -668,18 +668,23 @@ frappe.require("point-of-sale.bundle.js", function () {
 frappe.require("point-of-sale.bundle.js", function () {
 	if (!erpnext.PointOfSale || !erpnext.PointOfSale.Controller) return;
 
-	var Controller = erpnext.PointOfSale.Controller;
-
-	// Add the menu option next to "Open Form View" / "Close the POS"
-	var original_prepare_menu = Controller.prototype.prepare_menu;
-	Controller.prototype.prepare_menu = function () {
-		original_prepare_menu.call(this);
-		if (this.page && this.page.add_menu_item) {
-			this.page.add_menu_item(__("Salida de Dinero"), function () {
-				open_salida_de_dinero_dialog(this);
-			}.bind(this), false, "Ctrl+Shift+M");
+	// Add the "Salida de Dinero" option to the POS menu (three dots) once the
+	// POS is ready. We poll instead of overriding prepare_menu because the menu
+	// is built during POS init and a late override would miss it.
+	var attempts = 0;
+	var add_salida_menu = function () {
+		attempts++;
+		if (window.cur_pos && window.cur_pos.page && window.cur_pos.page.add_menu_item) {
+			window.cur_pos.page.add_menu_item(__("Salida de Dinero"), function () {
+				open_salida_de_dinero_dialog(window.cur_pos);
+			}, false, "Ctrl+Shift+M");
+			return;
+		}
+		if (attempts <= 150) {
+			setTimeout(add_salida_menu, 500);
 		}
 	};
+	setTimeout(add_salida_menu, 1000);
 
 	function get_pos_payment_modes(pos) {
 		// Return the mode-of-payment list from the POS profile settings

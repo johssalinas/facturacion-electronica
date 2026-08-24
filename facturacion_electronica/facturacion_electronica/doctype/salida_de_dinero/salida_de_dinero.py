@@ -9,10 +9,7 @@ from frappe import _
 from frappe.model.document import Document
 
 
-class SalidaDeDinero(Document):
-	def autoname(self):
-		self.name = self.make_autoname(self.naming_series)
-
+class SalidadeDinero(Document):
 	def validate(self):
 		if self.amount <= 0:
 			frappe.throw(_("El monto debe ser mayor a cero."))
@@ -46,18 +43,8 @@ class SalidaDeDinero(Document):
 	def get_cash_account(self):
 		"""Return the cash/bank account for the selected mode of payment."""
 		company = self.get_company()
-		pos_profile = self.get_pos_profile()
 
-		# 1) From the POS Profile payment method mapping
-		account = frappe.db.get_value(
-			"POS Payment Method",
-			{"parent": pos_profile, "mode_of_payment": self.mode_of_payment},
-			"default_account",
-		)
-		if account:
-			return account
-
-		# 2) From the Mode of Payment accounts (per company)
+		# 1) From the Mode of Payment accounts (per company)
 		account = frappe.db.get_value(
 			"Mode of Payment Account",
 			{"parent": self.mode_of_payment, "company": company},
@@ -66,7 +53,7 @@ class SalidaDeDinero(Document):
 		if account:
 			return account
 
-		# 3) Fallback: company default cash account
+		# 2) Fallback: company default cash account
 		account = frappe.db.get_value("Company", company, "default_cash_account")
 		if account:
 			return account

@@ -149,10 +149,22 @@ def get_invoices(start, end, pos_profile, user):
 	# (e.g. supplier paid in cash).
 	salidas = _get_salidas_de_dinero(start, end, pos_profile)
 	if salidas:
-		for p in data["payments"]:
-			salida_total = salidas.get(p.mode_of_payment, 0)
-			if salida_total:
-				p["amount"] = flt(p["amount"]) - flt(salida_total)
+		existing_modes = {p["mode_of_payment"] for p in data["payments"]}
+		for mode, total in salidas.items():
+			if mode in existing_modes:
+				for p in data["payments"]:
+					if p["mode_of_payment"] == mode:
+						p["amount"] = flt(p["amount"]) - flt(total)
+			else:
+				# A mode used ONLY for outflows (no sales) still reduces the
+				# expected cash, so add it as a negative line.
+				data["payments"].append(
+					{
+						"mode_of_payment": mode,
+						"account": _get_cash_account_for_mode(mode, pos_profile),
+						"amount": -flt(total),
+					}
+				)
 		data["salidas_de_dinero"] = _salidas_to_list(salidas)
 
 	# Enrich invoices with mode_of_payment and payment status for display in the closing entry table
@@ -213,6 +225,18 @@ def _to_datetime(value):
 		return frappe.utils.get_datetime(value)
 	except Exception:
 		return None
+
+
+def _get_cash_account_for_mode(mode, pos_profile):
+	company = frappe.db.get_value("POS Profile", pos_profile, "company")
+	account = frappe.db.get_value(
+		"Mode of Payment Account",
+		{"parent": mode, "company": company},
+		"default_account",
+	)
+	if not account:
+		account = frappe.db.get_value("Company", company, "default_cash_account")
+	return account
 
 
 def _salidas_to_list(salidas):
