@@ -912,3 +912,37 @@ También se re-alinea el ancho de la columna de precios tras el cambio de conten
 
 #### Despliegue
 Mismo proceso del 9.4: reconstruir imagen con `--no-cache`, redeploy via Coolify, `bench clear-cache`, reiniciar servicios. El script del POS se entrega vía `frappe.desk.desk_page.getpage` (campo `script`), así que tras el deploy el usuario puede necesitar **una** recarga de la página del POS para tomar el JS nuevo.
+
+---
+
+### 9.7 Salida de Dinero desde el POS (pago a proveedores / egresos de caja)
+
+**Fecha de implementación:** 24 de agosto de 2026  
+**Commits:** `d2b694b` (feature), `eed6e14`, `991826c` (fixes)
+
+#### Qué hace
+Desde el POS, el cajero puede abrir el menú (tres puntos) → **"Salida de Dinero"** y registrar un egreso de caja sin salirse del POS (por ejemplo, el pago en efectivo a un proveedor). Al guardar:
+
+1. Se crea y somete un documento **"Salida de Dinero"** ligado a la apertura de caja vigente.
+2. Se crea un **Journal Entry**: débito a la cuenta de gasto (o a la cuenta por pagar del proveedor si se selecciona) y crédito a la caja del modo de pago (Efectivo → 11051, Nequi → 11102, Llave → 11101).
+3. En el **cierre de caja** ese dinero sale del efectivo esperado: el `expected_amount` del modo se reduce y las salidas se listan en la tabla **"Salidas de Dinero"** del cierre.
+
+#### Componentes
+- **Doctype `Salida de Dinero`** (`facturacion_electronica/doctype/salida_de_dinero/`): campos `pos_opening_entry`, `posting_date/time`, `mode_of_payment`, `amount`, `party_type/party` (Proveedor/Cliente/Empleado), `debit_account` (opcional), `description`, `ref_no`, `create_accounting_entry`, `journal_entry`, `status`. Es `is_submittable` y `autoname` `SALIDA-.YYYY.-.#####`.
+  - `on_submit` crea el Journal Entry con `je.flags.ignore_permissions = True` (la cajera no tiene permisos de asientos, se crea en su nombre).
+  - `get_cash_account()` usa la cuenta del **Mode of Payment Account** por compañía (fallback: caja default de la compañía). **Ojo:** el `POS Payment Method` del POS Profile **no** tiene campo `default_account` en esta versión.
+  - La clase del controlador debe llamarse **`SalidadeDinero`** (convención Frappe: quita espacios, conserva mayúsculas). Si el nombre no coincide, `get_controller` falla y el migrate borra el doctype como "huérfano".
+- **Doctype hijo `Salida de Dinero Referencia`** + **Custom Field `POS Closing Entry-salidas_de_dinero`** (Table) para listar las salidas en el cierre.
+- **`overrides/pos_closing_entry.py`**: `get_invoices` resta las salidas sometidas del periodo por modo de pago del `expected_amount`; si un modo sólo tiene salidas (sin ventas) se agrega como línea negativa. Endpoint whitelisted `get_salidas_de_dinero(name)` (acepta nombre del cierre o de la apertura).
+- **`public/js/pos_custom.js`**: agrega el ítem **"Salida de Dinero"** al menú del POS con polling (`add_salida_menu` cada 500ms hasta que `cur_pos` esté listo; el override de `prepare_menu` se registraba tarde y no aparecía). El diálogo hace `frappe.client.insert` + `frappe.client.submit`.
+- **`public/js/pos_closing_entry.js`**: `fill_salidas_de_dinero(frm)` llena la tabla "Salidas de Dinero" en el cierre.
+
+#### Permisos
+- Roles con **crear/someter** en `Salida de Dinero`: System Manager, Accounts Manager y **Sales User** (cajera). La cajera no necesita permisos de Journal Entry porque el asiento se crea con `ignore_permissions`.
+
+#### Verificación (producción, navegador real + API)
+- Diálogo del POS crea y somete la salida → `SALIDA-2026-xxxxx` `Submitted` con su Journal Entry (débito 61351, crédito 11051).
+- Cierre para la apertura: `payment_reconciliation` muestra el Efectivo esperado reducido por las salidas y la tabla "Salidas de Dinero" lista cada una (modo, monto, motivo).
+- Datos de prueba eliminados al terminar.
+
+> **Nota de despliegue:** requiere `bench migrate` para crear los doctypes + custom field y `clear-cache`. Si `get_controller` falla por nombre de clase, el migrate borra el doctype como huérfano; verificar el nombre de la clase.
