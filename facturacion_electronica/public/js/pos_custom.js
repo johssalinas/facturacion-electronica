@@ -579,6 +579,47 @@ frappe.require("point-of-sale.bundle.js", function () {
 			}
 			// Call original render with the positioned element
 			original_render_cart_item.call(this, item_data, $item_to_update);
+
+			// Show the line TOTAL (precio unitario * cantidad) for every product.
+			// ERPNext only prints the total when item.amount != item.rate; we
+			// recompute it directly from qty * rate so it ALWAYS appears, e.g.
+			//   $ 20.000,00      (total)
+			//   $ 4.000,00 x 5   (precio unitario x cantidad)
+			var frm = this.events.get_frm();
+			var currency = frm.doc.currency;
+			this.$cart_items_wrapper.find(".cart-item-wrapper").each(function () {
+				var $w = $(this);
+				var row_name = $w.attr("data-row-name");
+				var item = frm.doc.items.find(function (r) { return r.name === row_name; });
+				if (!item) return;
+
+				var qty = flt(item.qty);
+				var rate = flt(item.rate);
+				var total = qty * rate;
+
+				var $rate = $w.find(".item-rate-amount .item-rate");
+				var $amount = $w.find(".item-rate-amount .item-amount");
+				if ($rate.length) {
+					$rate.html(format_currency(total, currency));
+				}
+				if ($amount.length) {
+					$amount.html(format_currency(rate, currency) + " x " + qty);
+				}
+			});
+
+			// Realign the price column after the content changes
+			var $all = this.$cart_items_wrapper.find(".item-rate-amount");
+			this.$cart_header.find(".rate-amount-header").css("width", "");
+			$all.css("width", "");
+			var max_w = 0;
+			$all.each(function () {
+				max_w = Math.max(max_w, $(this).width());
+			});
+			max_w += 1;
+			if (max_w > 1) {
+				this.$cart_header.find(".rate-amount-header").css("width", max_w);
+				$all.css("width", max_w);
+			}
 		};
 	}
 });
