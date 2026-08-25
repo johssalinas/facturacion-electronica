@@ -976,3 +976,18 @@ La impresión del **POS Closing Entry** ahora usa el formato **"Cierre de Caja S
 - Sección de Salidas de Dinero verificada con un cierre de prueba (montos listados).
 
 > **Despliegue:** imagen + `bench migrate` (corre el patch) + `clear-cache` + reiniciar servicios. El botón Imprimir del cierre ya usa el nuevo formato por ser el `default_print_format`.
+
+---
+
+### 9.9 Permisos de Exportación (Producto y Factura de Venta)
+
+**Fecha:** 24 de agosto de 2026  
+**Commit:** `10db616`
+
+Se otorgó permiso de **exportar** a Lorena y Andrea para los documentos:
+- **Item (Producto)** — ya tenían el permiso (roles Sales Manager / Item Manager con xport=1 en el Custom DocPerm de Item).
+- **Sales Invoice (Factura de Venta)** — Sales Invoice usa **Custom DocPerm** (que reemplazan los DocPerm estándar). Se seteó xport=1 en los Custom DocPerm de **Accounts Manager** (permlevel 0 y 1), rol que comparten Lorena y Andrea.
+
+Para que el permiso persista tras cada ench migrate, se agregó el patch **post_model_sync** 0_0_5.permisos_export_sales_invoice (el patches.txt se convirtió al formato INI con secciones [pre_model_sync] y [post_model_sync]).
+
+Verificado: can_export("Item") y can_export("Sales Invoice") = True para lorena@gmail.com y ndrea@gmail.com.
