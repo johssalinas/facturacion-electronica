@@ -6,3 +6,4 @@ facturacion_electronica.patches.v0_0_5.crear_impresion_cierre_caja
 
 [post_model_sync]
 facturacion_electronica.patches.v0_0_5.permisos_export_sales_invoice
+facturacion_electronica.patches.v0_0_6.property_setters_compra
