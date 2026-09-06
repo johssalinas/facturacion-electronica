@@ -379,7 +379,7 @@
   "fieldname": "purchase_tax_template",
   "fieldtype": "Link",
   "label": "Plantilla Impuesto de Compra",
-  "options": "Purchase Taxes and Charges Template",
+  "options": "Item Tax Template",
   "insert_after": "sales_tax_withholding_category",
   "permlevel": 0,
   "print_hide": 0,
