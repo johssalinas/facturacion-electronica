@@ -29,14 +29,14 @@ def execute():
 		"item_code.purchase_tax_template",
 	)
 
-	# 2) En compras el IVA se suma a la base (no está incluido en el precio),
-	#    a diferencia de ventas donde sí está incluido.
+	# 2) En compras el IVA también va incluido en el precio base
+	#    (coherente con ventas).
 	_ensure_property_setter(
 		"Purchase Taxes and Charges-included_in_print_rate-default",
 		"Purchase Taxes and Charges",
 		"included_in_print_rate",
 		"default",
-		"0",
+		"1",
 	)
 
 	frappe.db.commit()
