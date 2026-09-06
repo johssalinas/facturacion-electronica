@@ -1,3 +1,5 @@
+import json
+
 import frappe
 from erpnext.stock.get_item_details import (
 	get_item_tax_template as _native_get_item_tax_template,
@@ -13,6 +15,12 @@ def get_item_tax_template(ctx, item=None, out=None):
 	que está vacía), termina BORRANDO la plantilla que viene del campo custom
 	'purchase_tax_template'. Aquí, si la fila ya trae plantilla, la conservamos.
 	"""
+	if isinstance(ctx, str):
+		try:
+			ctx = json.loads(ctx)
+		except Exception:
+			ctx = {}
+
 	if isinstance(ctx, dict) and ctx.get("item_tax_template"):
 		return ctx["item_tax_template"]
 
