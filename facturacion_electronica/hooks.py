@@ -23,6 +23,7 @@ override_doctype_class = {
 override_whitelisted_methods = {
 	"erpnext.selling.page.point_of_sale.point_of_sale.check_opening_entry": "facturacion_electronica.overrides.pos_opening_entry.check_opening_entry",
 	"erpnext.accounts.doctype.pos_closing_entry.pos_closing_entry.get_invoices": "facturacion_electronica.overrides.pos_closing_entry.get_invoices",
+	"erpnext.stock.get_item_details.get_item_tax_template": "facturacion_electronica.overrides.get_item_details.get_item_tax_template",
 }
 
 doc_events = {
