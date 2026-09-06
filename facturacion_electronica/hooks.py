@@ -36,6 +36,9 @@ doc_events = {
 	"POS Closing Entry": {
 		"before_submit": "facturacion_electronica.events.pos_closing_entry.before_submit",
 	},
+	"Purchase Invoice": {
+		"before_validate": "facturacion_electronica.events.purchase_invoice.apply_purchase_tax_template",
+	},
 }
 
 scheduler_events = {
@@ -54,6 +57,7 @@ fixtures = [
 					"in",
 					[
 						"Item-dueno_fiscal",
+						"Item-purchase_tax_template",
 						"Account-fe_tax_code",
 						"Account-fe_is_excluded",
 						"UOM-fe_unit_measure_code",

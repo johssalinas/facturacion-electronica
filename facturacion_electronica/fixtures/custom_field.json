@@ -371,5 +371,19 @@
   "read_only": 1,
   "no_copy": 1,
   "print_hide": 1
+},
+{
+  "doctype": "Custom Field",
+  "name": "Item-purchase_tax_template",
+  "dt": "Item",
+  "fieldname": "purchase_tax_template",
+  "fieldtype": "Link",
+  "label": "Plantilla Impuesto de Compra",
+  "options": "Purchase Taxes and Charges Template",
+  "insert_after": "sales_tax_withholding_category",
+  "permlevel": 0,
+  "print_hide": 0,
+  "translatable": 0,
+  "description": "Plantilla de impuesto aplicada por defecto en las facturas de compra de este producto. Usar 'Compra Sin IVA - SM' cuando el proveedor no cobra IVA."
 }
 ]
