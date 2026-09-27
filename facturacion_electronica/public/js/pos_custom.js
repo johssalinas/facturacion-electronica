@@ -813,3 +813,136 @@ frappe.require("point-of-sale.bundle.js", function () {
 		dialog.get_field("party_type").$input.change();
 	}
 });
+
+
+
+// =============================================================================
+// 11. RECARGO BOLD 1.5%
+// Cuando el cajero selecciona "Bold" como modo de pago, se agrega
+// automáticamente un ítem de comisión al carrito (1.5% del subtotal).
+// Al cambiar a otro modo de pago, el ítem se elimina.
+//
+// Estrategia: delegación de eventos desde $(document) sobre [data-mode],
+// comparación case-insensitive. No depende de render_payment_mode ni
+// MutationObserver — es más simple y más robusto.
+//
+// Requisitos previos (ya creados en producción):
+//   - Item "COMISION-BOLD"  (Service, sin stock)
+//   - Mode of Payment "Bold" en el POS Profile
+// =============================================================================
+
+(function bold_surcharge_init() {
+	// ERPNext genera data-mode en minúscula → comparar siempre en lower
+	var BOLD_MODE_LOWER = "bold";
+	var BOLD_ITEM_CODE  = "COMISION-BOLD";
+	var BOLD_RATE       = 0.015; // 1.5 %
+
+	// ── Helpers ────────────────────────────────────────────────────────────────
+
+	function get_base_total(frm) {
+		// Suma grand_total excluyendo el ítem de comisión ya existente.
+		// Usamos grand_total del doc (incluye impuestos) menos la parte Bold.
+		var bold_amount = 0;
+		(frm.doc.items || []).forEach(function (i) {
+			if (i.item_code === BOLD_ITEM_CODE) bold_amount += flt(i.amount);
+		});
+		return flt(frm.doc.grand_total) - bold_amount;
+	}
+
+	function remove_bold_item(controller) {
+		var frm = controller.frm;
+		var bold_row = (frm.doc.items || []).find(function (i) { return i.item_code === BOLD_ITEM_CODE; });
+		if (!bold_row) return Promise.resolve();
+
+		return frappe.model.set_value(bold_row.doctype, bold_row.name, "qty", 0)
+			.then(function () {
+				frappe.model.clear_doc(bold_row.doctype, bold_row.name);
+				controller.update_cart_html(bold_row, true);
+				if (controller.item_details) {
+					controller.item_details.toggle_item_details_section(null);
+				}
+			});
+	}
+
+	function apply_bold_surcharge(controller) {
+		var frm = controller.frm;
+		if (!frm || !frm.doc.items || frm.doc.items.length === 0) return Promise.resolve();
+
+		var base      = get_base_total(frm);
+		if (base <= 0) return Promise.resolve();
+
+		var surcharge = Math.round(base * BOLD_RATE);
+		if (surcharge <= 0) return Promise.resolve();
+
+		var bold_row = (frm.doc.items || []).find(function (i) { return i.item_code === BOLD_ITEM_CODE; });
+
+		if (bold_row) {
+			if (Math.abs(flt(bold_row.rate) - surcharge) <= 1) return Promise.resolve();
+			return frappe.model.set_value(bold_row.doctype, bold_row.name, "rate", surcharge)
+				.then(function () {
+					controller.update_cart_html(bold_row);
+					if (controller.cart) controller.cart.update_totals_section(frm);
+					frappe.show_alert({ message: __("Comisión Bold (1.5%): {0}", [format_currency(surcharge, frm.doc.currency)]), indicator: "blue" }, 4);
+				});
+		}
+
+		// No existe: agregar
+		var new_row = frm.add_child("items", {
+			item_code: BOLD_ITEM_CODE,
+			qty: 1,
+			rate: surcharge,
+			warehouse: controller.settings && controller.settings.warehouse,
+			allow_zero_valuation_rate: 1,
+		});
+
+		return controller.trigger_new_item_events(new_row)
+			.then(function () {
+				return frappe.model.set_value(new_row.doctype, new_row.name, "rate", surcharge);
+			})
+			.then(function () {
+				controller.update_cart_html(new_row);
+				if (controller.cart) controller.cart.update_totals_section(frm);
+				frappe.show_alert({ message: __("Comisión Bold (1.5%): {0}", [format_currency(surcharge, frm.doc.currency)]), indicator: "blue" }, 4);
+			});
+	}
+
+	// ── Delegación de eventos desde document ──────────────────────────────────
+	// ERPNext renderiza [data-mode="bold"] (minúscula).
+	// Capturamos el click en bubbling — funciona sin importar cuándo se
+	// renderiza el panel de pagos.
+
+	var _last_mode = null;
+
+	$(document).on("click.bold_surcharge", "[data-mode]", function () {
+		var mode = ($(this).attr("data-mode") || "").toLowerCase();
+		if (mode === _last_mode) return; // sin cambios
+		_last_mode = mode;
+
+		var controller = window.cur_pos;
+		if (!controller || !controller.frm) return;
+
+		if (mode === BOLD_MODE_LOWER) {
+			apply_bold_surcharge(controller).catch(function (e) {
+				console.error("Bold surcharge error:", e);
+			});
+		} else {
+			remove_bold_item(controller).then(function () {
+				if (controller.cart) controller.cart.update_totals_section(controller.frm);
+			}).catch(function (e) {
+				console.error("Bold remove error:", e);
+			});
+		}
+	});
+
+	// ── Resetear al iniciar nueva factura ────────────────────────────────────
+	frappe.require("point-of-sale.bundle.js", function () {
+		if (!erpnext.PointOfSale || !erpnext.PointOfSale.Controller) return;
+		var _orig_new = erpnext.PointOfSale.Controller.prototype.create_new_invoice;
+		erpnext.PointOfSale.Controller.prototype.create_new_invoice = function () {
+			_last_mode = null;
+			return _orig_new ? _orig_new.apply(this, arguments) : undefined;
+		};
+	});
+
+	console.log("[FE] Recargo Bold 1.5% inicializado.");
+}());
