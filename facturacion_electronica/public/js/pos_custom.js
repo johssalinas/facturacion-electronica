@@ -861,7 +861,42 @@ frappe.require("point-of-sale.bundle.js", function () {
 				if (controller.item_details) {
 					controller.item_details.toggle_item_details_section(null);
 				}
+				return new Promise(function (resolve) { setTimeout(resolve, 300); });
+			})
+			.then(function () {
+				sync_payment_panel(controller);
 			});
+	}
+
+	// ── Sincronizar el panel de pagos con el nuevo grand_total ────────────────
+	// Después de agregar/quitar COMISION-BOLD el frm.doc.grand_total cambia,
+	// pero los controles del panel de pagos (input de monto, totales) se
+	// inicializaron con el valor anterior. Este helper los sincroniza.
+	function sync_payment_panel(controller) {
+		var frm = controller.frm;
+		var pay = controller.payment;
+		if (!pay) return;
+
+		var new_total = flt(frm.doc.grand_total);
+
+		// 1. Actualizar el amount del payment de Bold en frm.doc.payments
+		(frm.doc.payments || []).forEach(function (p) {
+			if ((p.mode_of_payment || "").toLowerCase() === BOLD_MODE_LOWER) {
+				// Poner el total completo en Bold (única forma de pago)
+				frappe.model.set_value(p.doctype, p.name, "amount", new_total);
+			}
+		});
+
+		// 2. Actualizar el control bold_control directamente (el input visible)
+		var bold_ctrl = pay.bold_control;
+		if (bold_ctrl && bold_ctrl.set_value) {
+			bold_ctrl.set_value(new_total);
+		}
+
+		// 3. Refrescar la sección de totales del panel de pagos
+		if (pay.update_totals_section) {
+			pay.update_totals_section(frm);
+		}
 	}
 
 	function apply_bold_surcharge(controller) {
@@ -877,11 +912,16 @@ frappe.require("point-of-sale.bundle.js", function () {
 		var bold_row = (frm.doc.items || []).find(function (i) { return i.item_code === BOLD_ITEM_CODE; });
 
 		if (bold_row) {
-			if (Math.abs(flt(bold_row.rate) - surcharge) <= 1) return Promise.resolve();
+			if (Math.abs(flt(bold_row.rate) - surcharge) <= 1) {
+				// Monto ya correcto — solo asegurar que el panel esté sincronizado
+				sync_payment_panel(controller);
+				return Promise.resolve();
+			}
 			return frappe.model.set_value(bold_row.doctype, bold_row.name, "rate", surcharge)
 				.then(function () {
 					controller.update_cart_html(bold_row);
 					if (controller.cart) controller.cart.update_totals_section(frm);
+					sync_payment_panel(controller);
 					frappe.show_alert({ message: __("Comisión Bold (1.5%): {0}", [format_currency(surcharge, frm.doc.currency)]), indicator: "blue" }, 4);
 				});
 		}
@@ -902,6 +942,11 @@ frappe.require("point-of-sale.bundle.js", function () {
 			.then(function () {
 				controller.update_cart_html(new_row);
 				if (controller.cart) controller.cart.update_totals_section(frm);
+				// Dar un tick para que ERPNext recalcule grand_total antes de sincronizar
+				return new Promise(function (resolve) { setTimeout(resolve, 300); });
+			})
+			.then(function () {
+				sync_payment_panel(controller);
 				frappe.show_alert({ message: __("Comisión Bold (1.5%): {0}", [format_currency(surcharge, frm.doc.currency)]), indicator: "blue" }, 4);
 			});
 	}
