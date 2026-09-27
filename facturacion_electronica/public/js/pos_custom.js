@@ -851,10 +851,8 @@ frappe.require("point-of-sale.bundle.js", function () {
 
 	// ── Recalcular totales del doc usando el trigger de ERPNext ────────────────
 	function recalculate(frm) {
-		// frm.script_manager.trigger("taxes") es el mecanismo que usa ERPNext
-		// internamente al editar la tabla de impuestos en el POS
 		try {
-			frm.script_manager.trigger("taxes", frm.doc.doctype, frm.doc.name);
+			frm.script_manager.trigger("calculate_taxes_and_totals");
 		} catch (e) {
 			console.error("[FE] recalculate error:", e);
 		}
