@@ -1,6 +1,5 @@
 import frappe
 from frappe import _
-from frappe.utils import flt
 
 from erpnext.accounts.doctype.pos_invoice.pos_invoice import POSInvoice
 
@@ -51,7 +50,6 @@ class CustomPOSInvoice(POSInvoice):
 		except AttributeError:
 			pass
 		self._clasificar_cliente_fe()
-		self._validar_recargo_bold()
 
 	def on_submit(self):
 		try:
@@ -91,62 +89,3 @@ class CustomPOSInvoice(POSInvoice):
 					indicator="red",
 				)
 		self.reload()
-
-	# ------------------------------------------------------------------
-	# Validación de recargo Bold
-	# ------------------------------------------------------------------
-	_BOLD_MODE      = "Bold"
-	_BOLD_ITEM_CODE = "COMISION-BOLD"
-	_BOLD_RATE      = 0.015  # 1.5 %
-
-	def _validar_recargo_bold(self):
-		"""Si el pago incluye Bold, verifica que exista el ítem de comisión
-		con el monto correcto (±1 peso de diferencia por redondeos).
-		Si falta o está mal, lo corrige en lugar de lanzar un error,
-		para no bloquear la cajera.
-		"""
-		uses_bold = any(
-			p.mode_of_payment == self._BOLD_MODE
-			for p in (self.payments or [])
-		)
-		if not uses_bold:
-			# Si no paga con Bold pero hay un ítem de comisión (cambio de modo
-			# de pago hecho en el último segundo), eliminarlo.
-			self.items = [i for i in self.items if i.item_code != self._BOLD_ITEM_CODE]
-			return
-
-		# Calcular base (total sin contar el ítem de comisión)
-		base = sum(
-			flt(i.amount)
-			for i in (self.items or [])
-			if i.item_code != self._BOLD_ITEM_CODE
-		)
-		expected = round(base * self._BOLD_RATE)
-
-		bold_rows = [i for i in (self.items or []) if i.item_code == self._BOLD_ITEM_CODE]
-
-		if not bold_rows:
-			# El ítem no llegó (edge case: cajero abrió panel pero no hubo
-			# tiempo para que el JS lo agregara). Lo creamos aquí.
-			if expected > 0:
-				self.append("items", {
-					"item_code": self._BOLD_ITEM_CODE,
-					"item_name": "Comisión Bold (1.5%)",
-					"qty": 1,
-					"rate": expected,
-					"uom": "Nos",
-					"warehouse": self.set_warehouse,
-					"allow_zero_valuation_rate": 1,
-				})
-				frappe.msgprint(
-					_("Se aplicó automáticamente la comisión Bold del 1.5%: {0}").format(
-						frappe.format_value(expected, {"fieldtype": "Currency"})
-					),
-					indicator="blue",
-				)
-		else:
-			# Corregir monto si hay discrepancia de más de 1 peso
-			for row in bold_rows:
-				if abs(flt(row.rate) - expected) > 1:
-					row.rate = expected
-					row.amount = expected

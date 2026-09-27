@@ -818,176 +818,164 @@ frappe.require("point-of-sale.bundle.js", function () {
 
 // =============================================================================
 // 11. RECARGO BOLD 1.5%
-// Cuando el cajero selecciona "Bold" como modo de pago, se agrega
-// automáticamente un ítem de comisión al carrito (1.5% del subtotal).
-// Al cambiar a otro modo de pago, el ítem se elimina.
 //
-// Estrategia: delegación de eventos desde $(document) sobre [data-mode],
-// comparación case-insensitive. No depende de render_payment_mode ni
-// MutationObserver — es más simple y más robusto.
+// Estrategia: cargo adicional en frm.doc.taxes (charge_type="Actual").
+// NO crea un ítem en el carrito. ERPNext recalcula grand_total solo cuando
+// se agrega/quita la fila de taxes y se dispara el trigger "taxes".
+// El panel de pagos se sincroniza al final.
 //
-// Requisitos previos (ya creados en producción):
-//   - Item "COMISION-BOLD"  (Service, sin stock)
-//   - Mode of Payment "Bold" en el POS Profile
+// Al seleccionar Bold  → se agrega la fila de taxes + se recalcula todo.
+// Al cambiar de modo   → se elimina la fila de taxes + se recalcula todo.
+// Al nueva factura     → se limpia el estado interno.
 // =============================================================================
 
 (function bold_surcharge_init() {
-	// ERPNext genera data-mode en minúscula → comparar siempre en lower
-	var BOLD_MODE_LOWER = "bold";
-	var BOLD_ITEM_CODE  = "COMISION-BOLD";
-	var BOLD_RATE       = 0.015; // 1.5 %
+	var BOLD_MODE_LOWER  = "bold";
+	var BOLD_RATE        = 0.015;  // 1.5 %
+	var BOLD_TAX_DESC    = "Comisión Bold (1.5%)";
+	var BOLD_ACCOUNT     = "41351 - Comercio al por Mayor - SM";
 
-	// ── Helpers ────────────────────────────────────────────────────────────────
-
-	function get_base_total(frm) {
-		// Suma grand_total excluyendo el ítem de comisión ya existente.
-		// Usamos grand_total del doc (incluye impuestos) menos la parte Bold.
-		var bold_amount = 0;
-		(frm.doc.items || []).forEach(function (i) {
-			if (i.item_code === BOLD_ITEM_CODE) bold_amount += flt(i.amount);
+	// ── Obtener fila de taxes Bold si ya existe ────────────────────────────────
+	function get_bold_tax_row(frm) {
+		return (frm.doc.taxes || []).find(function (t) {
+			return t.description === BOLD_TAX_DESC;
 		});
+	}
+
+	// ── Obtener el grand_total SIN contar la comisión Bold ─────────────────────
+	function get_base_total(frm) {
+		var bold_row = get_bold_tax_row(frm);
+		var bold_amount = bold_row ? flt(bold_row.tax_amount) : 0;
 		return flt(frm.doc.grand_total) - bold_amount;
 	}
 
-	function remove_bold_item(controller) {
-		var frm = controller.frm;
-		var bold_row = (frm.doc.items || []).find(function (i) { return i.item_code === BOLD_ITEM_CODE; });
-		if (!bold_row) return Promise.resolve();
-
-		return frappe.model.set_value(bold_row.doctype, bold_row.name, "qty", 0)
-			.then(function () {
-				frappe.model.clear_doc(bold_row.doctype, bold_row.name);
-				controller.update_cart_html(bold_row, true);
-				if (controller.item_details) {
-					controller.item_details.toggle_item_details_section(null);
-				}
-				return new Promise(function (resolve) { setTimeout(resolve, 300); });
-			})
-			.then(function () {
-				sync_payment_panel(controller);
-			});
+	// ── Recalcular totales del doc usando el trigger de ERPNext ────────────────
+	function recalculate(frm) {
+		// frm.script_manager.trigger("taxes") es el mecanismo que usa ERPNext
+		// internamente al editar la tabla de impuestos en el POS
+		try {
+			frm.script_manager.trigger("taxes", frm.doc.doctype, frm.doc.name);
+		} catch (e) {
+			console.error("[FE] recalculate error:", e);
+		}
 	}
 
-	// ── Sincronizar el panel de pagos con el nuevo grand_total ────────────────
-	// Después de agregar/quitar COMISION-BOLD el frm.doc.grand_total cambia,
-	// pero los controles del panel de pagos (input de monto, totales) se
-	// inicializaron con el valor anterior. Este helper los sincroniza.
-	function sync_payment_panel(controller) {
-		var frm = controller.frm;
-		var pay = controller.payment;
-		if (!pay) return;
+	// ── Sincronizar panel de pagos con el grand_total actualizado ──────────────
+	function sync_panel(controller) {
+		var frm = window.cur_pos && window.cur_pos.frm;
+		var pay = window.cur_pos && window.cur_pos.payment;
+		if (!frm || !pay) return;
 
 		var new_total = flt(frm.doc.grand_total);
 
-		// 1. Actualizar el amount del payment de Bold en frm.doc.payments
-		(frm.doc.payments || []).forEach(function (p) {
-			if ((p.mode_of_payment || "").toLowerCase() === BOLD_MODE_LOWER) {
-				// Poner el total completo en Bold (única forma de pago)
-				frappe.model.set_value(p.doctype, p.name, "amount", new_total);
-			}
-		});
-
-		// 2. Actualizar el control bold_control directamente (el input visible)
-		var bold_ctrl = pay.bold_control;
+		// Actualizar el control de Bold (input visible en pantalla)
+		var bold_ctrl = pay[BOLD_MODE_LOWER + "_control"];
 		if (bold_ctrl && bold_ctrl.set_value) {
 			bold_ctrl.set_value(new_total);
 		}
 
-		// 3. Refrescar la sección de totales del panel de pagos
+		// Actualizar el amount del payment de Bold en frm.doc.payments
+		(frm.doc.payments || []).forEach(function (p) {
+			if ((p.mode_of_payment || "").toLowerCase() === BOLD_MODE_LOWER) {
+				frappe.model.set_value(p.doctype, p.name, "amount", new_total);
+			}
+		});
+
+		// Refrescar el footer (Total General / Monto Pagado / Monto Restante)
 		if (pay.update_totals_section) {
-			pay.update_totals_section(frm);
+			pay.update_totals_section(frm.doc);
 		}
 	}
 
+	// ── Aplicar recargo ────────────────────────────────────────────────────────
 	function apply_bold_surcharge(controller) {
 		var frm = controller.frm;
-		if (!frm || !frm.doc.items || frm.doc.items.length === 0) return Promise.resolve();
+		if (!frm || !frm.doc.items || frm.doc.items.length === 0) return;
 
 		var base      = get_base_total(frm);
-		if (base <= 0) return Promise.resolve();
+		if (base <= 0) return;
 
 		var surcharge = Math.round(base * BOLD_RATE);
-		if (surcharge <= 0) return Promise.resolve();
+		if (surcharge <= 0) return;
 
-		var bold_row = (frm.doc.items || []).find(function (i) { return i.item_code === BOLD_ITEM_CODE; });
+		var existing = get_bold_tax_row(frm);
 
-		if (bold_row) {
-			if (Math.abs(flt(bold_row.rate) - surcharge) <= 1) {
-				// Monto ya correcto — solo asegurar que el panel esté sincronizado
-				sync_payment_panel(controller);
-				return Promise.resolve();
+		if (existing) {
+			// Ya existe: actualizar solo si cambió (por cambio de productos)
+			if (Math.abs(flt(existing.tax_amount) - surcharge) <= 1) {
+				sync_panel(controller);
+				return;
 			}
-			return frappe.model.set_value(bold_row.doctype, bold_row.name, "rate", surcharge)
-				.then(function () {
-					controller.update_cart_html(bold_row);
-					if (controller.cart) controller.cart.update_totals_section(frm);
-					sync_payment_panel(controller);
-					frappe.show_alert({ message: __("Comisión Bold (1.5%): {0}", [format_currency(surcharge, frm.doc.currency)]), indicator: "blue" }, 4);
-				});
+			frappe.model.set_value(existing.doctype, existing.name, "tax_amount", surcharge);
+		} else {
+			// Nueva fila de cargo adicional
+			frm.add_child("taxes", {
+				charge_type:  "Actual",
+				account_head: BOLD_ACCOUNT,
+				description:  BOLD_TAX_DESC,
+				tax_amount:   surcharge,
+				included_in_print_rate: 0,
+			});
 		}
 
-		// No existe: agregar
-		var new_row = frm.add_child("items", {
-			item_code: BOLD_ITEM_CODE,
-			qty: 1,
-			rate: surcharge,
-			warehouse: controller.settings && controller.settings.warehouse,
-			allow_zero_valuation_rate: 1,
+		// Disparar recalculo y después sincronizar el panel
+		recalculate(frm);
+		setTimeout(function () {
+			sync_panel(controller);
+			frappe.show_alert({
+				message: __("Comisión Bold (1.5%): {0}", [
+					format_currency(surcharge, frm.doc.currency)
+				]),
+				indicator: "blue",
+			}, 4);
+		}, 600);
+	}
+
+	// ── Quitar recargo ─────────────────────────────────────────────────────────
+	function remove_bold_surcharge(controller) {
+		var frm = controller.frm;
+		if (!frm) return;
+
+		var existing = get_bold_tax_row(frm);
+		if (!existing) return;
+
+		// Eliminar la fila de la child table
+		frappe.model.clear_doc(existing.doctype, existing.name);
+		frm.doc.taxes = (frm.doc.taxes || []).filter(function (t) {
+			return t.name !== existing.name;
 		});
 
-		return controller.trigger_new_item_events(new_row)
-			.then(function () {
-				return frappe.model.set_value(new_row.doctype, new_row.name, "rate", surcharge);
-			})
-			.then(function () {
-				controller.update_cart_html(new_row);
-				if (controller.cart) controller.cart.update_totals_section(frm);
-				// Dar un tick para que ERPNext recalcule grand_total antes de sincronizar
-				return new Promise(function (resolve) { setTimeout(resolve, 300); });
-			})
-			.then(function () {
-				sync_payment_panel(controller);
-				frappe.show_alert({ message: __("Comisión Bold (1.5%): {0}", [format_currency(surcharge, frm.doc.currency)]), indicator: "blue" }, 4);
-			});
+		recalculate(frm);
+		setTimeout(function () { sync_panel(controller); }, 600);
 	}
 
 	// ── Delegación de eventos desde document ──────────────────────────────────
-	// ERPNext renderiza [data-mode="bold"] (minúscula).
-	// Capturamos el click en bubbling — funciona sin importar cuándo se
-	// renderiza el panel de pagos.
-
 	var _last_mode = null;
 
 	$(document).on("click.bold_surcharge", "[data-mode]", function () {
 		var mode = ($(this).attr("data-mode") || "").toLowerCase();
-		if (mode === _last_mode) return; // sin cambios
+		if (mode === _last_mode) return;
 		_last_mode = mode;
 
 		var controller = window.cur_pos;
 		if (!controller || !controller.frm) return;
 
 		if (mode === BOLD_MODE_LOWER) {
-			apply_bold_surcharge(controller).catch(function (e) {
-				console.error("Bold surcharge error:", e);
-			});
+			apply_bold_surcharge(controller);
 		} else {
-			remove_bold_item(controller).then(function () {
-				if (controller.cart) controller.cart.update_totals_section(controller.frm);
-			}).catch(function (e) {
-				console.error("Bold remove error:", e);
-			});
+			remove_bold_surcharge(controller);
 		}
 	});
 
-	// ── Resetear al iniciar nueva factura ────────────────────────────────────
+	// ── Limpiar estado al iniciar nueva factura ────────────────────────────────
 	frappe.require("point-of-sale.bundle.js", function () {
 		if (!erpnext.PointOfSale || !erpnext.PointOfSale.Controller) return;
-		var _orig_new = erpnext.PointOfSale.Controller.prototype.create_new_invoice;
+		var _orig = erpnext.PointOfSale.Controller.prototype.create_new_invoice;
 		erpnext.PointOfSale.Controller.prototype.create_new_invoice = function () {
 			_last_mode = null;
-			return _orig_new ? _orig_new.apply(this, arguments) : undefined;
+			return _orig ? _orig.apply(this, arguments) : undefined;
 		};
 	});
 
-	console.log("[FE] Recargo Bold 1.5% inicializado.");
+	console.log("[FE] Recargo Bold 1.5% (via taxes) inicializado.");
 }());
