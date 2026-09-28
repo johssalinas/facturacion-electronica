@@ -859,6 +859,7 @@ frappe.require("point-of-sale.bundle.js", function () {
 	}
 
 	// ── Sincronizar panel de pagos con el grand_total actualizado ──────────────
+	// Pone el grand_total completo en Bold y limpia los demás modos a 0.
 	function sync_panel(controller) {
 		var frm = window.cur_pos && window.cur_pos.frm;
 		var pay = window.cur_pos && window.cur_pos.payment;
@@ -866,16 +867,18 @@ frappe.require("point-of-sale.bundle.js", function () {
 
 		var new_total = flt(frm.doc.grand_total);
 
-		// Actualizar el control de Bold (input visible en pantalla)
-		var bold_ctrl = pay[BOLD_MODE_LOWER + "_control"];
-		if (bold_ctrl && bold_ctrl.set_value) {
-			bold_ctrl.set_value(new_total);
-		}
-
-		// Actualizar el amount del payment de Bold en frm.doc.payments
 		(frm.doc.payments || []).forEach(function (p) {
-			if ((p.mode_of_payment || "").toLowerCase() === BOLD_MODE_LOWER) {
+			var pm = (p.mode_of_payment || "").toLowerCase();
+			if (pm === BOLD_MODE_LOWER) {
+				// Bold recibe el total completo (con recargo)
 				frappe.model.set_value(p.doctype, p.name, "amount", new_total);
+				var ctrl = pay[pm + "_control"];
+				if (ctrl && ctrl.set_value) ctrl.set_value(new_total);
+			} else {
+				// Los demás modos quedan en 0 (evita doble cobro)
+				frappe.model.set_value(p.doctype, p.name, "amount", 0);
+				var ctrl2 = pay[pm + "_control"];
+				if (ctrl2 && ctrl2.set_value) ctrl2.set_value(0);
 			}
 		});
 
@@ -930,13 +933,14 @@ frappe.require("point-of-sale.bundle.js", function () {
 	}
 
 	// ── Quitar recargo ─────────────────────────────────────────────────────────
-	function remove_bold_surcharge(controller) {
+	// new_mode = modo de pago recién seleccionado (minúscula), al que hay que
+	// asignarle el grand_total ya recalculado (sin recargo).
+	function remove_bold_surcharge(controller, new_mode) {
 		var frm = controller.frm;
 		var pay = controller.payment;
 		if (!frm) return;
 
-		// 1. Poner a cero el payment de Bold y su control ANTES de recalcular,
-		//    para que ERPNext no deje ese valor "flotando" al recalcular.
+		// 1. Poner a cero el payment y control de Bold ANTES de recalcular
 		var bold_ctrl = pay && pay[BOLD_MODE_LOWER + "_control"];
 		if (bold_ctrl && bold_ctrl.set_value) {
 			bold_ctrl.set_value(0);
@@ -947,21 +951,38 @@ frappe.require("point-of-sale.bundle.js", function () {
 			}
 		});
 
-		// 2. Eliminar la fila de taxes
+		// 2. Eliminar la fila de taxes si existe
 		var existing = get_bold_tax_row(frm);
-		if (!existing) {
-			// No hay tax row pero sí puede haber un payment con valor residual
-			if (pay && pay.update_totals_section) pay.update_totals_section(frm.doc);
-			return;
+		if (existing) {
+			frappe.model.clear_doc(existing.doctype, existing.name);
+			frm.doc.taxes = (frm.doc.taxes || []).filter(function (t) {
+				return t.name !== existing.name;
+			});
 		}
-		frappe.model.clear_doc(existing.doctype, existing.name);
-		frm.doc.taxes = (frm.doc.taxes || []).filter(function (t) {
-			return t.name !== existing.name;
-		});
 
-		// 3. Recalcular y refrescar el footer
+		// 3. Recalcular. Después de recalcular, ERPNext deja paid_amount con el
+		//    valor anterior (con recargo) sobre el modo recién seleccionado, así
+		//    que forzamos el monto correcto en el nuevo modo y ponemos en 0 los
+		//    demás modos (excepto Bold que ya está en 0).
 		recalculate(frm);
 		setTimeout(function () {
+			var correct_total = flt(frm.doc.grand_total);
+
+			(frm.doc.payments || []).forEach(function (p) {
+				var pm = (p.mode_of_payment || "").toLowerCase();
+				if (pm === new_mode) {
+					// El modo recién seleccionado recibe el total exacto (sin recargo)
+					frappe.model.set_value(p.doctype, p.name, "amount", correct_total);
+					var ctrl = pay && pay[pm + "_control"];
+					if (ctrl && ctrl.set_value) ctrl.set_value(correct_total);
+				} else {
+					// Todos los demás modos quedan en 0 (evita doble cobro)
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
+					var ctrl2 = pay && pay[pm + "_control"];
+					if (ctrl2 && ctrl2.set_value) ctrl2.set_value(0);
+				}
+			});
+
 			if (pay && pay.update_totals_section) pay.update_totals_section(frm.doc);
 		}, 600);
 	}
@@ -987,7 +1008,7 @@ frappe.require("point-of-sale.bundle.js", function () {
 		if (mode === BOLD_MODE_LOWER) {
 			apply_bold_surcharge(controller);
 		} else {
-			remove_bold_surcharge(controller);
+			remove_bold_surcharge(controller, mode);
 		}
 	});
 
