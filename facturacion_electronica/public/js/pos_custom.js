@@ -932,27 +932,53 @@ frappe.require("point-of-sale.bundle.js", function () {
 	// ── Quitar recargo ─────────────────────────────────────────────────────────
 	function remove_bold_surcharge(controller) {
 		var frm = controller.frm;
+		var pay = controller.payment;
 		if (!frm) return;
 
-		var existing = get_bold_tax_row(frm);
-		if (!existing) return;
+		// 1. Poner a cero el payment de Bold y su control ANTES de recalcular,
+		//    para que ERPNext no deje ese valor "flotando" al recalcular.
+		var bold_ctrl = pay && pay[BOLD_MODE_LOWER + "_control"];
+		if (bold_ctrl && bold_ctrl.set_value) {
+			bold_ctrl.set_value(0);
+		}
+		(frm.doc.payments || []).forEach(function (p) {
+			if ((p.mode_of_payment || "").toLowerCase() === BOLD_MODE_LOWER) {
+				frappe.model.set_value(p.doctype, p.name, "amount", 0);
+			}
+		});
 
-		// Eliminar la fila de la child table
+		// 2. Eliminar la fila de taxes
+		var existing = get_bold_tax_row(frm);
+		if (!existing) {
+			// No hay tax row pero sí puede haber un payment con valor residual
+			if (pay && pay.update_totals_section) pay.update_totals_section(frm.doc);
+			return;
+		}
 		frappe.model.clear_doc(existing.doctype, existing.name);
 		frm.doc.taxes = (frm.doc.taxes || []).filter(function (t) {
 			return t.name !== existing.name;
 		});
 
+		// 3. Recalcular y refrescar el footer
 		recalculate(frm);
-		setTimeout(function () { sync_panel(controller); }, 600);
+		setTimeout(function () {
+			if (pay && pay.update_totals_section) pay.update_totals_section(frm.doc);
+		}, 600);
 	}
 
 	// ── Delegación de eventos desde document ──────────────────────────────────
+	// Nota: NO usamos guard "_last_mode === mode" para el caso Bold, porque
+	// el usuario puede borrar el monto con el teclado y luego volver a
+	// hacer click en Bold — en ese caso mode no cambia pero sí hay que
+	// volver a aplicar el recargo.
+
 	var _last_mode = null;
 
 	$(document).on("click.bold_surcharge", "[data-mode]", function () {
 		var mode = ($(this).attr("data-mode") || "").toLowerCase();
-		if (mode === _last_mode) return;
+
+		// Para modos distintos de Bold, ignorar clicks repetidos en el mismo modo
+		if (mode !== BOLD_MODE_LOWER && mode === _last_mode) return;
 		_last_mode = mode;
 
 		var controller = window.cur_pos;
