@@ -984,17 +984,21 @@ frappe.require("point-of-sale.bundle.js", function () {
 	}
 
 	// ── Enganchar al evento de cambio de montos de pago ────────────────────────
-	// bind_paid_amount_event se dispara cada vez que cambia cualquier monto
-	// de pago. Es el punto ideal para recalcular la comisión Bold.
+	// update_totals_section se llama cada vez que cambia cualquier monto de pago
+	// (desde el onchange de los controles). Es el punto correcto para recalcular
+	// la comisión Bold. El guard _busy evita recursión, porque nosotros también
+	// llamamos update_totals_section al ajustar los montos.
 	frappe.require("point-of-sale.bundle.js", function () {
 		if (!erpnext.PointOfSale || !erpnext.PointOfSale.Payment) return;
 
 		var Payment = erpnext.PointOfSale.Payment;
-		var _orig_bind = Payment.prototype.bind_paid_amount_event;
+		var _orig_update = Payment.prototype.update_totals_section;
 
-		Payment.prototype.bind_paid_amount_event = function (doc) {
-			var result = _orig_bind ? _orig_bind.apply(this, arguments) : undefined;
-			if (window.cur_pos) schedule_refresh(window.cur_pos);
+		Payment.prototype.update_totals_section = function (doc) {
+			var result = _orig_update ? _orig_update.apply(this, arguments) : undefined;
+			if (!_busy && window.cur_pos) {
+				schedule_refresh(window.cur_pos);
+			}
 			return result;
 		};
 
