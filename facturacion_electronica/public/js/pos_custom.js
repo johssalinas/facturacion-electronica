@@ -944,6 +944,7 @@ frappe.require("point-of-sale.bundle.js", function () {
 			var bp = get_bold_payment(frm);
 			if (bp) {
 				bp.amount = bold_total;
+				frappe.model.set_value(bp.doctype, bp.name, "amount", bold_total);
 				var ctrl = pay[BOLD_MODE_LOWER + "_control"];
 				if (ctrl && ctrl.set_value) ctrl.set_value(bold_total);
 			}
@@ -951,14 +952,26 @@ frappe.require("point-of-sale.bundle.js", function () {
 
 			if (pay.update_totals_section) pay.update_totals_section(frm.doc);
 
+			// Segunda pasada de seguridad: reconfirmar el monto tras el eco del
+			// evento de ERPNext (que puede repintar el control con el valor viejo).
+			setTimeout(function () {
+				var bp2 = get_bold_payment(frm);
+				if (bp2 && Math.abs(flt(bp2.amount) - bold_total) > 1) {
+					bp2.amount = bold_total;
+					frappe.model.set_value(bp2.doctype, bp2.name, "amount", bold_total);
+					var ctrl2 = pay[BOLD_MODE_LOWER + "_control"];
+					if (ctrl2 && ctrl2.set_value) ctrl2.set_value(bold_total);
+					if (pay.update_totals_section) pay.update_totals_section(frm.doc);
+				}
+				_busy = false;
+			}, 400);
+
 			frappe.show_alert({
 				message: __("Comisión Bold (1.5%): {0}", [
 					format_currency(commission, frm.doc.currency)
 				]),
 				indicator: "blue",
 			}, 3);
-
-			_busy = false;
 		}, 500);
 	}
 
