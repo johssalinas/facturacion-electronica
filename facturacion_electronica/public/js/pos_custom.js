@@ -892,7 +892,6 @@ frappe.require("point-of-sale.bundle.js", function () {
 		var existing = get_bold_tax_row(frm);
 
 		var bold_amount = bold_pay ? flt(bold_pay.amount) : 0;
-		console.log("BOLD-DBG: refresh ejecutado, bold_amount=" + bold_amount + " _last=" + _last_bold_total);
 
 		// Si el monto de Bold es exactamente el que dejamos la última vez,
 		// el evento lo disparamos nosotros → ignorar.
@@ -985,27 +984,43 @@ frappe.require("point-of-sale.bundle.js", function () {
 	}
 
 	// ── Enganchar al evento de cambio de montos de pago ────────────────────────
-	// update_totals_section se llama cada vez que cambia cualquier monto de pago
-	// (desde el onchange de los controles). Es el punto correcto para recalcular
-	// la comisión Bold. El guard _busy evita recursión, porque nosotros también
-	// llamamos update_totals_section al ajustar los montos.
-	frappe.require("point-of-sale.bundle.js", function () {
-		if (!erpnext.PointOfSale || !erpnext.PointOfSale.Payment) return;
+	// update_totals_section se llama cada vez que cambia cualquier monto de pago.
+	// Es el punto correcto para recalcular la comisión Bold.
+	//
+	// Aplicamos el override tanto en el PROTOTIPO como en la INSTANCIA viva
+	// (window.cur_pos.payment), con reintentos, porque el POS puede instanciar
+	// el componente Payment antes o después de que corra este script.
+	function install_hook() {
+		if (!window.erpnext || !erpnext.PointOfSale || !erpnext.PointOfSale.Payment) return false;
 
-		var Payment = erpnext.PointOfSale.Payment;
-		var _orig_update = Payment.prototype.update_totals_section;
+		var proto = erpnext.PointOfSale.Payment.prototype;
 
-		Payment.prototype.update_totals_section = function (doc) {
-			var result = _orig_update ? _orig_update.apply(this, arguments) : undefined;
-			if (!_busy && window.cur_pos) {
-				console.log("BOLD-DBG: update_totals_section disparado, programando refresh");
-				schedule_refresh(window.cur_pos);
-			}
-			return result;
-		};
+		// Override en el prototipo (si no está ya instalado)
+		if (!proto._bold_hooked) {
+			proto._bold_hooked = true;
+			var _orig_proto = proto.update_totals_section;
+			proto.update_totals_section = function (doc) {
+				var result = _orig_proto ? _orig_proto.apply(this, arguments) : undefined;
+				if (!_busy && window.cur_pos) schedule_refresh(window.cur_pos);
+				return result;
+			};
+		}
 
-		// Limpiar al crear nueva factura
-		if (erpnext.PointOfSale.Controller) {
+		// Override en la instancia viva (por si se creó antes del override de proto)
+		var inst = window.cur_pos && window.cur_pos.payment;
+		if (inst && !inst._bold_hooked && inst.hasOwnProperty("update_totals_section")) {
+			inst._bold_hooked = true;
+			var _orig_inst = inst.update_totals_section.bind(inst);
+			inst.update_totals_section = function (doc) {
+				var result = _orig_inst(doc);
+				if (!_busy && window.cur_pos) schedule_refresh(window.cur_pos);
+				return result;
+			};
+		}
+
+		// Controller: limpiar estado al crear nueva factura
+		if (erpnext.PointOfSale.Controller && !erpnext.PointOfSale.Controller.prototype._bold_hooked) {
+			erpnext.PointOfSale.Controller.prototype._bold_hooked = true;
 			var _orig_new = erpnext.PointOfSale.Controller.prototype.create_new_invoice;
 			erpnext.PointOfSale.Controller.prototype.create_new_invoice = function () {
 				_busy = false;
@@ -1014,7 +1029,20 @@ frappe.require("point-of-sale.bundle.js", function () {
 				return _orig_new ? _orig_new.apply(this, arguments) : undefined;
 			};
 		}
-	});
+		return true;
+	}
+
+	// Instalar el hook con reintentos (el bundle puede tardar en cargar)
+	var _hook_attempts = 0;
+	var _hook_interval = setInterval(function () {
+		_hook_attempts++;
+		if (install_hook() || _hook_attempts > 100) {
+			clearInterval(_hook_interval);
+		}
+	}, 300);
+
+	// También intentar vía require (por si el interval no lo pilla a tiempo)
+	frappe.require("point-of-sale.bundle.js", function () { install_hook(); });
 
 	console.log("[FE] Recargo Bold 1.5% (pago parcial) inicializado.");
 }());
