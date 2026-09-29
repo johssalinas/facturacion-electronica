@@ -892,6 +892,7 @@ frappe.require("point-of-sale.bundle.js", function () {
 		var existing = get_bold_tax_row(frm);
 
 		var bold_amount = bold_pay ? flt(bold_pay.amount) : 0;
+		console.log("BOLD-DBG: refresh ejecutado, bold_amount=" + bold_amount + " _last=" + _last_bold_total);
 
 		// Si el monto de Bold es exactamente el que dejamos la última vez,
 		// el evento lo disparamos nosotros → ignorar.
@@ -997,6 +998,7 @@ frappe.require("point-of-sale.bundle.js", function () {
 		Payment.prototype.update_totals_section = function (doc) {
 			var result = _orig_update ? _orig_update.apply(this, arguments) : undefined;
 			if (!_busy && window.cur_pos) {
+				console.log("BOLD-DBG: update_totals_section disparado, programando refresh");
 				schedule_refresh(window.cur_pos);
 			}
 			return result;
