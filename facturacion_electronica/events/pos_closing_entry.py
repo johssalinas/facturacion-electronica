@@ -26,15 +26,41 @@ def _pendientes_en_cierre(doc):
 
 
 def before_submit(doc, method=None):
-	pend = _pendientes_en_cierre(doc)
-	if pend:
-		frappe.throw(
+	"""La facturacion electronica al cerrar caja es OPCIONAL.
+
+	Si la cajera marco el checkbox "Generar factura electronica consolidada"
+	se intenta el envio automatico de todas las facturas pendientes del
+	cierre (igual que el boton manual "Enviar pendientes a DIAN"). Si el
+	envio falla para algun dueño fiscal, NO se bloquea el cierre de caja: se
+	deja constancia en el Log Factura Electronica y la venta sigue disponible
+	para facturarse despues, manualmente, desde "Facturacion Manual FE".
+
+	Si el checkbox no esta marcado, el cierre se somete sin enviar nada a
+	DIAN; las ventas quedan con estado_fe = "Pendiente" para facturarse mas
+	adelante (automatico en un cierre posterior o manual).
+	"""
+	if not doc.get("generar_fe_cierre"):
+		return
+	try:
+		_enviar_pendientes_del_cierre(doc)
+	except Exception as e:
+		frappe.log_error(title=f"FE auto-cierre {doc.name}", message=str(e))
+		frappe.msgprint(
 			_(
-				"Tiene {0} factura(s) pendiente(s) de enviar a la DIAN. Use el boton"
-				" 'Enviar pendientes a DIAN' antes de cerrar caja."
-			).format(frappe.bold(len(pend))),
-			title=_("Facturas pendientes en DIAN"),
+				"No se pudo generar la factura electronica automatica al cerrar caja: {0}."
+				" El cierre continua normalmente; puede generar la factura despues desde"
+				" 'Facturacion Manual FE'."
+			).format(str(e)),
+			indicator="orange",
+			title=_("Facturacion Electronica"),
 		)
+
+
+def _enviar_pendientes_del_cierre(doc):
+	pend = _pendientes_en_cierre(doc)
+	if not pend:
+		return {"ok": True, "enviadas": 0, "errores": []}
+	return _procesar_pendientes(doc, pend)
 
 
 @frappe.whitelist()
@@ -47,12 +73,11 @@ def get_pendientes_fe(name):
 	}
 
 
-@frappe.whitelist()
-def enviar_pendientes_fe(name):
-	doc = frappe.get_doc("POS Closing Entry", name)
-	pend = _pendientes_en_cierre(doc)
-	if not pend:
-		return {"ok": True, "enviadas": 0, "errores": [], "message": _("No hay facturas pendientes")}
+def _procesar_pendientes(doc, pend):
+	"""Envia a Factus todas las facturas pendientes del cierre (B2B, Manual y
+	CCF agrupado). Usado tanto por el boton manual 'Enviar pendientes a DIAN'
+	como por la opcion automatica-opcional del cierre de caja.
+	"""
 	ccf_pos = []
 	enviadas = 0
 	errores = []
@@ -88,6 +113,18 @@ def enviar_pendientes_fe(name):
 		res = agrupar_y_enviar_ccf(ccf_pos, fecha_str, ref_suffix=doc.name)
 		enviadas += res.get("enviadas", 0)
 		errores.extend(res.get("errores", []))
+	return {"enviadas": enviadas, "errores": errores}
+
+
+@frappe.whitelist()
+def enviar_pendientes_fe(name):
+	doc = frappe.get_doc("POS Closing Entry", name)
+	pend = _pendientes_en_cierre(doc)
+	if not pend:
+		return {"ok": True, "enviadas": 0, "errores": [], "message": _("No hay facturas pendientes")}
+	res = _procesar_pendientes(doc, pend)
+	enviadas = res["enviadas"]
+	errores = res["errores"]
 	if errores:
 		return {
 			"ok": False,

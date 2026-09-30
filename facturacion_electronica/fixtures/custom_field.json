@@ -374,6 +374,19 @@
 },
 {
   "doctype": "Custom Field",
+  "name": "POS Closing Entry-generar_fe_cierre",
+  "dt": "POS Closing Entry",
+  "fieldname": "generar_fe_cierre",
+  "fieldtype": "Check",
+  "label": "Generar factura electronica consolidada al cerrar (opcional)",
+  "insert_after": "salidas_de_dinero",
+  "default": "0",
+  "no_copy": 1,
+  "print_hide": 1,
+  "description": "Si se marca, al someter este cierre se intentara enviar automaticamente a la DIAN todas las facturas pendientes del periodo (agrupadas por due\u00f1o fiscal). Si falla, el cierre de caja NO se bloquea: puede generar la factura despues manualmente desde 'Facturacion Manual FE'."
+},
+{
+  "doctype": "Custom Field",
   "name": "Item-purchase_tax_template",
   "dt": "Item",
   "fieldname": "purchase_tax_template",

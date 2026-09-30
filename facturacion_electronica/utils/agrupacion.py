@@ -13,6 +13,7 @@ from facturacion_electronica.utils.api_fe import (
 	_get_customer_obj,
 	_get_item_obj,
 )
+from facturacion_electronica.utils.pendientes import registrar_consumo
 
 PENDIENTES = (None, "", "Pendiente", "Error")
 
@@ -21,6 +22,7 @@ def agrupar_y_enviar_ccf(pos_invoice_names, fecha_str, ref_suffix=""):
 	config = get_config()
 	ccf_customer = config.cliente_consumidor_final
 	grupos = {}
+	consumo_por_dueno = {}
 	invoice_duenos = {}
 	if not ccf_customer:
 		return {"enviadas": 0, "errores": ["No hay cliente 'Consumidor Final' configurado"]}
@@ -51,13 +53,28 @@ def agrupar_y_enviar_ccf(pos_invoice_names, fecha_str, ref_suffix=""):
 				}
 				grupos[d][key] = agg
 			agg["qty"] = flt(agg["qty"] + flt(row.qty), 2)
+			consumo_por_dueno.setdefault(d, []).append(
+				{
+					"invoice_item": row.name,
+					"invoice_doctype": "POS Invoice",
+					"invoice_name": name,
+					"qty": flt(row.qty),
+					"item_code": row.item_code,
+					"item_name": row.item_name,
+					"net_rate": row.net_rate,
+					"uom": row.uom,
+				}
+			)
 	enviadas = 0
 	errores = []
 	exitosos = set()
 	suffix = (ref_suffix or "")[-8:].replace(" ", "")
 	for dueno, items_map in grupos.items():
 		try:
-			_emitir_resumen(dueno, fecha_str, list(items_map.values()), ccf_customer, config, suffix)
+			log_name = _emitir_resumen(dueno, fecha_str, list(items_map.values()), ccf_customer, config, suffix)
+			registrar_consumo(
+				dueno, consumo_por_dueno.get(dueno, []), log_name=log_name, tipo_operacion="Resumen Diario CCF"
+			)
 			enviadas += 1
 			exitosos.add(dueno)
 		except Exception as e:
@@ -102,6 +119,7 @@ def _emitir_resumen(dueno, fecha_str, items, ccf_customer, config, suffix=""):
 			mensaje=resp.get("message"),
 			errores=data.get("errors"),
 		)
+		return log_name
 	except Exception as e:
 		actualizar_log(log_name, estado="Error", errores={"error": str(e)}, mensaje=str(e))
 		raise

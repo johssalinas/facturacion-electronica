@@ -82,6 +82,7 @@ fixtures = [
 						"POS Invoice-cufe_fe",
 						"Mode of Payment-fe_tipo_medio_pago",
 						"POS Closing Entry-salidas_de_dinero",
+						"POS Closing Entry-generar_fe_cierre",
 					],
 				]
 			]

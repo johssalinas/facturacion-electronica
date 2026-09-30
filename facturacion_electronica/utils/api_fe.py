@@ -431,7 +431,17 @@ def _construir_payload(doc, dueno, items, tipo_operacion, config, send_email=Non
 	return payload
 
 
-def enviar_factura_fe(doc, dueno, items, tipo_operacion="Manual", send_email=None):
+def enviar_factura_fe(doc, dueno, items, tipo_operacion="Manual", send_email=None, consumo_rows=None):
+	"""Emite una factura electronica en Factus para el dueño fiscal dado.
+
+	consumo_rows (opcional): lista de dicts describiendo que lineas de venta
+	origen (Sales/POS Invoice Item) y cuanta cantidad se estan facturando en
+	este envio. Si no se pasa, se intenta derivar automaticamente de `items`
+	cuando estas son filas reales de child table (caso B2B inmediato,
+	reintento, envio manual sobre una factura puntual). El registro en el
+	ledger "FE Consumo Item" solo se hace si el envio a Factus fue exitoso,
+	para mantener la trazabilidad de cantidad pendiente vs facturada.
+	"""
 	config = get_config()
 	if not items:
 		frappe.throw(_("No hay items para facturar para el dueño {0}").format(dueno))
@@ -445,6 +455,10 @@ def enviar_factura_fe(doc, dueno, items, tipo_operacion="Manual", send_email=Non
 		estado="Pendiente",
 		payload=payload,
 	)
+	if consumo_rows is None:
+		from facturacion_electronica.utils.pendientes import consumo_rows_desde_filas_reales
+
+		consumo_rows = consumo_rows_desde_filas_reales(items)
 	api = FacturacionElectronicaAPI(dueno)
 	try:
 		resp = api.emitir_factura(payload)
@@ -467,6 +481,10 @@ def enviar_factura_fe(doc, dueno, items, tipo_operacion="Manual", send_email=Non
 		doc.db_set("estado_fe", estado)
 		if data.get("is_validated"):
 			doc.db_set("cufe_fe", data.get("cufe") or "")
+		if consumo_rows:
+			from facturacion_electronica.utils.pendientes import registrar_consumo
+
+			registrar_consumo(dueno, consumo_rows, log_name=log_name, tipo_operacion=tipo_operacion)
 		return data
 	except Exception as e:
 		actualizar_log(log_name, estado="Error", errores={"error": str(e)}, mensaje=str(e))

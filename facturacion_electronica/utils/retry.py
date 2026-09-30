@@ -9,6 +9,26 @@ from facturacion_electronica.facturacion_electronica.doctype.log_factura_electro
 )
 
 
+def _es_rechazo(errores_raw):
+	"""Determina si el ultimo error registrado es un RECHAZO real de la DIAN
+	(hay que eliminar el documento y corregir) o una simple demora de
+	validacion (no hay que eliminar, solo reintentar el mismo reference_code).
+
+	Segun la documentacion oficial de Factus (manejo de errores): solo se
+	debe eliminar la factura cuando el campo "errors" contiene la palabra
+	"rechazo". Si la DIAN simplemente esta demorada en responder, se reintenta
+	sin eliminar para no perder el consecutivo ni duplicar esfuerzo.
+	"""
+	if not errores_raw:
+		return False
+	try:
+		data = json.loads(errores_raw) if isinstance(errores_raw, str) else errores_raw
+	except Exception:
+		data = errores_raw
+	texto = json.dumps(data, ensure_ascii=False, default=str) if not isinstance(data, str) else data
+	return "rechazo" in texto.lower()
+
+
 def reintentar_facturas_fallidas():
 	config = frappe.get_cached_doc("Configuracion API FE")
 	max_intentos = int(config.reintentos_maximos or 3)
@@ -26,10 +46,11 @@ def _reintentar_log(log, max_intentos):
 	try:
 		payload = json.loads(log.payload_enviado)
 		api = FacturacionElectronicaAPI(log.dueno_fiscal)
-		try:
-			api.eliminar_factura(log.reference_code)
-		except Exception:
-			pass
+		if _es_rechazo(log.errores):
+			try:
+				api.eliminar_factura(log.reference_code)
+			except Exception:
+				pass
 		resp = api.emitir_factura(payload)
 		data = resp.get("data", {}) if isinstance(resp, dict) else {}
 		links = data.get("links", {}) or {}

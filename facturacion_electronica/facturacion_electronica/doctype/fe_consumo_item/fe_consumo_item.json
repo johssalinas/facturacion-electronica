@@ -1,0 +1,162 @@
+{
+ "actions": [],
+ "autoname": "FE-CONS-.YYYY.-.#####",
+ "creation": "2026-09-30 00:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "engine": "InnoDB",
+ "field_order": [
+  "dueno_fiscal",
+  "item_code",
+  "item_name",
+  "col_1",
+  "net_rate",
+  "qty_consumida",
+  "uom",
+  "referencia_section",
+  "invoice_doctype",
+  "invoice_name",
+  "invoice_item",
+  "col_2",
+  "tipo_operacion",
+  "log_factura_electronica",
+  "fecha"
+ ],
+ "fields": [
+  {
+   "fieldname": "dueno_fiscal",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Due\u00f1o Fiscal",
+   "options": "Dueno Fiscal",
+   "reqd": 1
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Producto",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "Nombre Producto",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "net_rate",
+   "fieldtype": "Currency",
+   "label": "Precio Unitario (Neto)"
+  },
+  {
+   "fieldname": "qty_consumida",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Cantidad Consumida (Facturada)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "label": "Unidad de Medida",
+   "options": "UOM"
+  },
+  {
+   "fieldname": "referencia_section",
+   "fieldtype": "Section Break",
+   "label": "Documento de Venta Origen"
+  },
+  {
+   "fieldname": "invoice_doctype",
+   "fieldtype": "Select",
+   "label": "Tipo Documento",
+   "options": "Sales Invoice\nPOS Invoice",
+   "reqd": 1
+  },
+  {
+   "fieldname": "invoice_name",
+   "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
+   "label": "Documento de Venta",
+   "options": "invoice_doctype",
+   "reqd": 1
+  },
+  {
+   "fieldname": "invoice_item",
+   "fieldtype": "Data",
+   "label": "Linea de Item Origen (row name)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tipo_operacion",
+   "fieldtype": "Data",
+   "label": "Tipo Operacion FE"
+  },
+  {
+   "fieldname": "log_factura_electronica",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Log Factura Electronica",
+   "options": "Log Factura Electronica"
+  },
+  {
+   "fieldname": "fecha",
+   "fieldtype": "Datetime",
+   "label": "Fecha de Consumo",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-09-30 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Facturacion Electronica",
+ "name": "FE Consumo Item",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts User",
+   "share": 1,
+   "write": 0
+  }
+ ],
+ "sort_field": "fecha",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
