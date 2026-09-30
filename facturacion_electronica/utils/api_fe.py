@@ -186,6 +186,31 @@ class FacturacionElectronicaAPI:
 		return resp.status_code in (200, 204)
 
 
+def calcular_total_con_impuestos(items_obj):
+	"""Calcula el total de una factura (base + impuestos) a partir de los
+	items ya construidos para el payload de Factus (ver _get_item_obj).
+
+	Factus valida que la suma de payment_details sea EXACTAMENTE igual al
+	total de la factura con impuestos incluidos, no solo la base gravable.
+	Si no coinciden, la API rechaza el documento con:
+	"La suma de todos los detalles de pago no es igual al total de la
+	factura".
+	"""
+	total = 0.0
+	for item in items_obj:
+		qty = flt(item.get("quantity"))
+		price = flt(item.get("price"))
+		discount_rate = flt(item.get("discount_rate") or 0)
+		base = qty * price * (1 - discount_rate / 100)
+		impuestos = 0.0
+		for tax in item.get("taxes") or []:
+			if tax.get("is_excluded"):
+				continue
+			impuestos += base * flt(tax.get("rate")) / 100
+		total += base + impuestos
+	return round(total, 2)
+
+
 def build_reference_code(doc, dueno, tipo):
 	prefix = "RESUMEN" if tipo == "Resumen Diario CCF" else "FE"
 	base = f"{prefix}-{doc.name}-{dueno}".replace(" ", "")
@@ -235,8 +260,8 @@ def _get_customer_obj(customer):
 		obj["names"] = cust.customer_name
 	if cust.get("fe_dv"):
 		obj["dv"] = cstr(cust.get("fe_dv"))
-	email = cust.email_id or ""
-	phone = cust.phone or ""
+	email = cust.get("email_id") or ""
+	phone = cust.get("mobile_no") or cust.get("phone") or ""
 	addr = _get_customer_address(cust)
 	if addr:
 		if not email:

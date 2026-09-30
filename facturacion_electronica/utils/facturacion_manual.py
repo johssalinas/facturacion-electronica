@@ -36,6 +36,7 @@ from facturacion_electronica.utils.api_fe import (
 	FacturacionElectronicaAPI,
 	_get_customer_obj,
 	_get_item_obj,
+	calcular_total_con_impuestos,
 )
 from facturacion_electronica.utils.pendientes import (
 	get_pendientes_agrupado,
@@ -60,6 +61,10 @@ def get_pendientes(dueno_fiscal):
 	if not dueno_fiscal:
 		frappe.throw(_("Debe indicar un dueño fiscal"))
 	return get_pendientes_agrupado(dueno_fiscal)
+
+
+def _total_con_impuestos(items_obj):
+	return calcular_total_con_impuestos(items_obj)
 
 
 @frappe.whitelist()
@@ -93,7 +98,7 @@ def generar_factura_manual(dueno_fiscal, selecciones, customer=None, send_email=
 
 	customer_obj = _get_customer_obj(customer)
 	items_obj = [_get_item_obj(it, config) for it in items_payload]
-	total = sum(flt(i["qty"]) * flt(i["net_rate"]) for i in items_payload)
+	total = _total_con_impuestos(items_obj)
 
 	cred = frappe.get_cached_doc("Dueno Fiscal", dueno_fiscal)
 	payload = {

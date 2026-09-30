@@ -12,6 +12,7 @@ from facturacion_electronica.utils.api_fe import (
 	FacturacionElectronicaAPI,
 	_get_customer_obj,
 	_get_item_obj,
+	calcular_total_con_impuestos,
 )
 from facturacion_electronica.utils.pendientes import registrar_consumo
 
@@ -87,10 +88,9 @@ def agrupar_y_enviar_ccf(pos_invoice_names, fecha_str, ref_suffix=""):
 
 
 def _emitir_resumen(dueno, fecha_str, items, ccf_customer, config, suffix=""):
-	total = sum(flt(i["qty"]) * flt(i["net_rate"]) for i in items)
 	if not items:
 		return
-	payload = _build_resumen_payload(dueno, fecha_str, items, total, ccf_customer, config, suffix)
+	payload = _build_resumen_payload(dueno, fecha_str, items, ccf_customer, config, suffix)
 	log_name = crear_log(
 		reference_doctype="POS Invoice",
 		reference_name=f"RESUMEN-{dueno}-{fecha_str}-{suffix}".replace("  ", " ").strip(),
@@ -125,9 +125,10 @@ def _emitir_resumen(dueno, fecha_str, items, ccf_customer, config, suffix=""):
 		raise
 
 
-def _build_resumen_payload(dueno, fecha_str, items, total, ccf_customer, config, suffix=""):
+def _build_resumen_payload(dueno, fecha_str, items, ccf_customer, config, suffix=""):
 	customer = _get_customer_obj(ccf_customer)
 	items_payload = [_get_item_obj(it, config) for it in items]
+	total = calcular_total_con_impuestos(items_payload)
 	cred = frappe.get_cached_doc("Dueno Fiscal", dueno)
 	ref = f"RESUMEN-{dueno}-{fecha_str}-{suffix}".replace(" ", "")
 	payload = {
