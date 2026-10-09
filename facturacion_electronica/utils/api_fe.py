@@ -233,7 +233,14 @@ def _get_customer_address(cust):
 		return {}
 	a = frappe.get_cached_doc("Address", addr_name)
 	addr = " ".join([x for x in [a.address_line1, a.address_line2] if x]).strip()
-	return {"address": addr, "phone": a.phone or "", "email": a.email_id or ""}
+	return {
+		"address": addr, 
+		"phone": a.phone or "", 
+		"email": a.email_id or "",
+		"city": a.city or "",
+		"state": a.state or "",
+		"country": a.country or "Colombia"
+	}
 
 
 def _get_customer_obj(customer):
@@ -262,21 +269,50 @@ def _get_customer_obj(customer):
 		obj["dv"] = cstr(cust.get("fe_dv"))
 	email = cust.get("email_id") or ""
 	phone = cust.get("mobile_no") or cust.get("phone") or ""
-	addr = _get_customer_address(cust)
-	if addr:
+	addr_data = _get_customer_address(cust)
+	
+	if addr_data:
 		if not email:
-			email = addr.get("email", "")
+			email = addr_data.get("email", "")
 		if not phone:
-			phone = addr.get("phone", "")
-		if addr.get("address"):
-			obj["address"] = addr["address"]
+			phone = addr_data.get("phone", "")
+		
+		# Construir address en formato estructurado para cumplir con FAK08
+		if addr_data.get("address"):
+			# Obtener código DIVIPOLA del municipio
+			muni_codigo = _fe_codigo("Municipio FE", cust.get("fe_municipality_code"))
+			
+			# Extraer código departamento de los primeros 2 dígitos del DIVIPOLA
+			dept_code = muni_codigo[:2] if muni_codigo and len(muni_codigo) >= 5 else ""
+			
+			obj["address"] = {
+				"id": addr_data.get("address")[:20],  # ID corto de la dirección
+				"city_name": addr_data.get("city") or "N/A",
+				"country_subentity": addr_data.get("state") or "N/A",
+				"country_subentity_code": dept_code or "N/A",
+				"address_line": {
+					"line": addr_data.get("address")
+				},
+				"country": {
+					"identification_code": "CO"
+				}
+			}
+			
+			# También incluir municipality_code si existe
+			if muni_codigo:
+				obj["municipality_code"] = muni_codigo
+	
 	if email:
 		obj["email"] = email
 	if phone:
 		obj["phone"] = phone
-	muni = _fe_codigo("Municipio FE", cust.get("fe_municipality_code"))
-	if muni:
-		obj["municipality_code"] = muni
+	
+	# Si no se pudo construir address estructurada, agregar municipality_code solo
+	if "address" not in obj:
+		muni = _fe_codigo("Municipio FE", cust.get("fe_municipality_code"))
+		if muni:
+			obj["municipality_code"] = muni
+	
 	return obj
 
 

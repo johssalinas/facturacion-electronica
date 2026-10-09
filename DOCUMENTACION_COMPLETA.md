@@ -991,3 +991,94 @@ Se otorgó permiso de **exportar** a Lorena y Andrea para los documentos:
 Para que el permiso persista tras cada ench migrate, se agregó el patch **post_model_sync** 0_0_5.permisos_export_sales_invoice (el patches.txt se convirtió al formato INI con secciones [pre_model_sync] y [post_model_sync]).
 
 Verificado: can_export("Item") y can_export("Sales Invoice") = True para lorena@gmail.com y ndrea@gmail.com.
+
+---
+
+## 10. Agregar / Modificar Accesos Directos del Desktop por Usuario
+
+**Última aplicación:** 1 de septiembre de 2026 — se agregó "Analisis de Ventas" (Sales Analytics) al desktop de Lorena.
+
+### 10.1 Concepto: cómo se guardan los accesos directos
+
+Cada usuario con layout personalizado tiene un registro en el doctype **`Desktop Layout`**:
+- **Nombre del registro** = el email del usuario (ej. `lorena@gmail.com`).
+- **Campo `layout`** = un string **JSON** con la lista de accesos directos (iconos) que se muestran en `/desk/desktop`.
+
+> En esta versión de Frappe **NO** existe el doctype "Desktop Shortcut". No tocar `Desktop Icon` (ese es el catálogo estándar de módulos, no el layout por usuario).
+
+Estructura de cada ítem del JSON de `layout`:
+
+| Campo | Ejemplo | Descripción |
+|---|---|---|
+| `label` | `"Analisis de Ventas"` | Texto visible bajo el icono |
+| `link` | `"/app/query-report/Sales Analytics"` | Ruta de destino |
+| `link_type` | `"External"` | Siempre `"External"` en estos layouts |
+| `icon_type` | `"Link"` | Siempre `"Link"` |
+| `icon` | `"financial_reports"` | Icono (semantic/octicon) |
+| `idx` | `6` | Orden de aparición (ascendente) |
+| `standard` | `1` | Siempre `1` |
+| `name` | `"Sales Analytics"` | Identificador único interno |
+| `hidden` | `0` | Mostrar = 0 |
+| `restrict_removal` | `0` | 1 = el usuario no puede quitarlo (ej. POS) |
+| `bg_color` | `"orange"` | Color del tile |
+| `parent_icon` | `null` | Siempre `null` |
+
+Usuarios con Desktop Layout: `sharith@gmail.com`, `lorena@gmail.com`, `andrea@gmail.com`. Si un usuario no tiene registro, usa el layout por defecto de su rol.
+
+### 10.2 Requisitos previos (verificar antes de agregar)
+
+1. **Existe el reporte/página destino** — ej. buscar el reporte real:
+   ```bash
+   curl -s -b cookies.txt "https://salsamentariamultiespecial.duckdns.org/api/method/frappe.client.get_list?doctype=Report&filters=[[\"name\",\"like\",\"%Sales%Analytics%\"]]&fields=[\"name\"]"
+   # → "Sales Analytics" (es "Análisis de Ventas" en español)
+   ```
+2. **El usuario tiene permiso** para verlo — iniciar sesión como el usuario y probar el reporte:
+   ```bash
+   curl -s -b cookies_lorena.txt "https://salsamentariamultiespecial.duckdns.org/api/method/frappe.desk.query_report.run?report_name=Sales%20Analytics"
+   # Si responde "permiso denegado", primero otorgar el rol necesario.
+   ```
+
+### 10.3 Procedimiento paso a paso
+
+**PASO 1 — Login como admin (guardar cookies):**
+```bash
+curl -s -X POST "https://salsamentariamultiespecial.duckdns.org/api/method/login" \
+  -d "usr=johssalinas2work@gmail.com" -d "pwd=<password superadmin>" \
+  -c cookies.txt
+```
+
+**PASO 2 — Leer el layout actual del usuario:**
+```bash
+curl -s -b cookies.txt "https://salsamentariamultiespecial.duckdns.org/api/resource/Desktop%20Layout/lorena@gmail.com"
+```
+El campo `layout` viene como string JSON (escapado). Ver los iconos:
+```powershell
+$doc = curl.exe -s -g -b cookies.txt "https://.../api/resource/Desktop%20Layout/lorena@gmail.com" | ConvertFrom-Json
+$doc.data.layout | ConvertFrom-Json | ForEach-Object { "idx=$($_.idx) | $($_.label) | $($_.link)" }
+```
+
+**PASO 3 — Construir el nuevo ítem** copiando el formato de un ítem existente y ajustando `label`, `link`, `icon`, `name`, `bg_color` e `idx`.
+
+**PASO 4 — Insertar y reindexar** (PowerShell): decidir la posición, agregar el ítem nuevo, incrementar `idx` de los que van después y hacer `PUT`:
+```powershell
+$payload = @{ layout = $newLayoutJson } | ConvertTo-Json -Compress
+curl.exe -s -g -b cookies.txt -X PUT -H "Content-Type: application/json" -d $payload \
+  "https://salsamentariamultiespecial.duckdns.org/api/resource/Desktop%20Layout/lorena@gmail.com"
+```
+
+**PASO 5 — Verificar:** releer el layout y confirmar orden + enlace. Probar el enlace con sesión del usuario final.
+
+> **Sin redeploy:** el cambio es solo en BD (`tabDesktop Layout`), que vive en el volumen de datos. **No** requiere rebuild de imagen ni `bench migrate`. El usuario debe recargar la página del desktop (o `Ctrl+Shift+R`) para ver el cambio si ya tiene la sesión abierta.
+
+### 10.4 Iconos y colores usados por categoría (referencia)
+
+| Categoría | icon sugerido | bg_color |
+|---|---|---|
+| POS / Caja | `selling`, `invoicing` | `blue` |
+| Ventas (doctypes/reportes) | `financial_reports`, `buying` | `blue` / `orange` |
+| Inventario / Stock | `stock`, `assets`, `manufacturing` | `green` |
+| Maestros (Clientes/Proveedores/Productos) | `crm`, `support`, `manufacturing` | `gray` |
+| Reportes financieros/contables | `bar-chart`, `book`, `list` | `gray` |
+| Config / Logs FE | `file-pdf`, `settings` | `gray` |
+
+Regla práctica: reportes de ventas usan `bg_color: "orange"`; los tiles de la misma área comparten color.
