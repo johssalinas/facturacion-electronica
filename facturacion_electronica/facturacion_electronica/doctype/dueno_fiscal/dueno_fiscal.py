@@ -25,6 +25,7 @@ def get_credenciales(dueno_name):
 		frappe.throw(_("El dueño fiscal {0} no esta activo").format(dueno_name))
 	secret = get_decrypted_password("Dueno Fiscal", dueno.name, "client_secret", raise_exception=False) or ""
 	password = get_decrypted_password("Dueno Fiscal", dueno.name, "password", raise_exception=False) or ""
+	username = get_decrypted_password("Dueno Fiscal", dueno.name, "username", raise_exception=False) or dueno.username or ""
 	muni_code = ""
 	if dueno.municipality_code:
 		muni_code = (
@@ -43,7 +44,7 @@ def get_credenciales(dueno_name):
 		"numbering_range_id": dueno.numbering_range_id,
 		"client_id": dueno.client_id,
 		"client_secret": secret,
-		"username": dueno.username,
+		"username": username,
 		"password": password,
 	}
 

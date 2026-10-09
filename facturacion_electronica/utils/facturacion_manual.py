@@ -57,6 +57,24 @@ def get_duenos_fiscales_activos():
 
 
 @frappe.whitelist()
+def actualizar_credenciales_sandbox(dueno_fiscal, client_id, client_secret):
+	"""Actualiza las credenciales sandbox de un dueño fiscal (solo para testing)"""
+	if not frappe.has_permission("Dueno Fiscal", "write"):
+		frappe.throw(_("No tiene permisos para actualizar credenciales"))
+	
+	doc = frappe.get_doc("Dueno Fiscal", dueno_fiscal)
+	doc.client_id = client_id
+	
+	from frappe.utils.password import set_encrypted_password
+	set_encrypted_password("Dueno Fiscal", dueno_fiscal, client_secret, fieldname="client_secret")
+	
+	doc.save(ignore_permissions=True)
+	frappe.db.commit()
+	
+	return {"ok": True, "dueno": dueno_fiscal}
+
+
+@frappe.whitelist()
 def get_pendientes(dueno_fiscal):
 	if not dueno_fiscal:
 		frappe.throw(_("Debe indicar un dueño fiscal"))
