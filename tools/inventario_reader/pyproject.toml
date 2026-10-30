@@ -1,0 +1,8 @@
+[project]
+name = "inventario-reader"
+version = "0.1.0"
+description = "Lectura y validacion del Excel de nuevas entradas de inventario"
+requires-python = ">=3.11"
+dependencies = [
+    "openpyxl==3.1.5",
+]
