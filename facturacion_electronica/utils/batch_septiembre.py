@@ -204,7 +204,7 @@ def _emitir_factura_consolidada(dueno_fiscal, fecha, items, customer, config):
 		"send_email": False,  # No enviar emails en sandbox
 		"customer": customer_obj,
 		"items": items_obj,
-		"observation": f"Consolidado ventas día {fecha} - Septiembre 2026 (Sandbox Test)",
+		"observation": f"Consolidado ventas día {fecha} - Septiembre 2026",
 	}
 	
 	if cred and cred.numbering_range_id:
