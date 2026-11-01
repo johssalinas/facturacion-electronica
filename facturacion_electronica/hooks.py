@@ -114,4 +114,4 @@ page_js = {
 	"point-of-sale": ["public/js/pos_custom.js", "public/js/pos_scale.js"],
 }
 
-app_include_js = ["public/js/desktop_redirect.js"]
+app_include_js = ["/assets/facturacion_electronica/js/desktop_redirect.js"]
