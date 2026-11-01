@@ -1,111 +1,84 @@
-"""
-Crea en ERPNext el Mode of Payment "Bold" y el ítem de servicio "COMISION-BOLD".
+"""Idempotent Bold configuration helper.
 
-Ejecutar una sola vez desde el servidor:
-
-  BC=$(docker ps -q --filter "name=backend-vvekd3jmyymltrmfoi8vdbdu" | head -1)
-  docker exec $BC bash -lc '
-    cd /home/frappe/frappe-bench &&
-    bench --site salsamentariamultiespecial.duckdns.org execute \
-      facturacion_electronica.utils.setup_bold.run
-  '
+Creates/updates the Mode of Payment and configures every POS Profile that
+already includes Bold. The old COMISION-BOLD item is disabled because the
+surcharge is represented as a document-level charge, never as a cart item.
 """
 
 import frappe
 
+from facturacion_electronica.utils.bold_surcharge import DEFAULT_RATE
+
+BOLD_MODE = "Bold"
+DEFAULT_ACCOUNT = "41351 - Comercio al por Mayor - SM"
+
 
 def run():
-    _create_mode_of_payment()
-    _create_bold_item()
-    frappe.db.commit()
-    print("✅  Setup Bold completado.")
+	_create_or_update_mode_of_payment()
+	_configure_pos_profiles()
+	_disable_legacy_item()
+	frappe.db.commit()
+	print("Bold configurado correctamente.")
 
 
-# ---------------------------------------------------------------------------
-# Mode of Payment
-# ---------------------------------------------------------------------------
+def _create_or_update_mode_of_payment():
+	if frappe.db.exists("Mode of Payment", BOLD_MODE):
+		doc = frappe.get_doc("Mode of Payment", BOLD_MODE)
+	else:
+		doc = frappe.get_doc(
+			{"doctype": "Mode of Payment", "mode_of_payment": BOLD_MODE, "type": "Bank"}
+		)
+		doc.flags.ignore_permissions = True
+		doc.insert()
 
-def _create_mode_of_payment():
-    name = "Bold"
-    if frappe.db.exists("Mode of Payment", name):
-        print(f"  · Mode of Payment '{name}' ya existe — omitido.")
-        return
+	if doc.type != "Bank":
+		doc.db_set("type", "Bank", update_modified=False)
 
-    doc = frappe.get_doc({
-        "doctype": "Mode of Payment",
-        "mode_of_payment": name,
-        "type": "Bank",
-    })
-    doc.flags.ignore_permissions = True
-    doc.insert()
-    print(f"  ✓ Mode of Payment '{name}' creado (type=Bank).")
-
-    # Código DIAN: 48 = Tarjeta Débito (lo más representativo para datáfono)
-    _asignar_fe_tipo_medio_pago(name, preferred_codes=["48", "22", "47"])
+	if not doc.get("fe_tipo_medio_pago"):
+		for value in ("Tarjeta de Débito", "Tarjeta Débito", "48", "Transferencia"):
+			if frappe.db.exists("Tipo Medio Pago FE", value):
+				doc.db_set("fe_tipo_medio_pago", value, update_modified=False)
+				break
 
 
-def _asignar_fe_tipo_medio_pago(mop_name, preferred_codes):
-    for code in preferred_codes:
-        if frappe.db.exists("Tipo Medio Pago FE", code):
-            frappe.db.set_value("Mode of Payment", mop_name, "fe_tipo_medio_pago", code)
-            print(f"  ✓ fe_tipo_medio_pago = '{code}' asignado a '{mop_name}'.")
-            return
-    codes = frappe.db.get_all("Tipo Medio Pago FE", pluck="name")
-    print(f"  ⚠  Ningún código preferido encontrado. Disponibles: {codes}")
-    print(f"     Asigna fe_tipo_medio_pago manualmente: Mode of Payment > Bold.")
+def _resolve_account(company):
+	if frappe.db.exists("Account", DEFAULT_ACCOUNT):
+		account_company, is_group, disabled = frappe.db.get_value(
+			"Account", DEFAULT_ACCOUNT, ["company", "is_group", "disabled"]
+		)
+		if account_company == company and not is_group and not disabled:
+			return DEFAULT_ACCOUNT
+
+	return frappe.db.get_value(
+		"Account",
+		{
+			"company": company,
+			"root_type": "Income",
+			"is_group": 0,
+			"disabled": 0,
+		},
+		"name",
+	)
 
 
-# ---------------------------------------------------------------------------
-# Item COMISION-BOLD
-# ---------------------------------------------------------------------------
+def _configure_pos_profiles():
+	profile_names = frappe.get_all(
+		"POS Payment Method",
+		filters={"mode_of_payment": BOLD_MODE, "parenttype": "POS Profile"},
+		pluck="parent",
+	)
+	for name in set(profile_names):
+		profile = frappe.get_doc("POS Profile", name)
+		account = _resolve_account(profile.company)
+		if not account:
+			print(f"ADVERTENCIA: no hay cuenta de ingreso para configurar Bold en {name}.")
+			continue
+		profile.db_set("custom_bold_surcharge_rate", DEFAULT_RATE, update_modified=False)
+		profile.db_set("custom_bold_surcharge_account", account, update_modified=False)
+		print(f"POS Profile {name}: {DEFAULT_RATE}% -> {account}")
 
-def _create_bold_item():
-    item_code = "COMISION-BOLD"
-    if frappe.db.exists("Item", item_code):
-        print(f"  · Item '{item_code}' ya existe — omitido.")
-        return
 
-    company = (
-        frappe.db.get_single_value("Global Defaults", "default_company")
-        or "Salsamentaria Multiespecial"
-    )
-
-    # Buscar una cuenta de ingresos activa (no grupo) de la compañía
-    income_account = frappe.db.get_value(
-        "Account",
-        {
-            "company": company,
-            "account_type": "Income Account",
-            "is_group": 0,
-            "disabled": 0,
-        },
-        "name",
-    ) or f"Sales - SM"
-
-    doc = frappe.get_doc({
-        "doctype": "Item",
-        "item_code": item_code,
-        "item_name": "Comisión Bold (1.5%)",
-        "item_group": "Services",
-        "stock_uom": "Nos",
-        "is_stock_item": 0,
-        "is_sales_item": 1,
-        "is_purchase_item": 0,
-        "include_item_in_manufacturing": 0,
-        "description": (
-            "Recargo automático por pago con datáfono Bold. "
-            "Equivale al 1.5% del total de la venta. "
-            "No modificar manualmente — el POS lo calcula al seleccionar el modo de pago Bold."
-        ),
-        "item_defaults": [
-            {
-                "company": company,
-                "income_account": income_account,
-            }
-        ],
-    })
-    doc.flags.ignore_permissions = True
-    doc.insert()
-    print(f"  ✓ Item '{item_code}' creado.")
-    print(f"    income_account: {income_account}")
-    print(f"    Nota: el ítem NO necesita lista de precios — el POS asigna la tasa dinámicamente.")
+def _disable_legacy_item():
+	if frappe.db.exists("Item", "COMISION-BOLD"):
+		frappe.db.set_value("Item", "COMISION-BOLD", "disabled", 1, update_modified=False)
+		print("Item legado COMISION-BOLD deshabilitado (ya no se usa en el carrito).")

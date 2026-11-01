@@ -4,9 +4,19 @@ from frappe import _
 from erpnext.accounts.doctype.pos_invoice.pos_invoice import POSInvoice
 
 from facturacion_electronica.utils.api_fe import _duenos_en_factura, enviar_factura_fe
+from facturacion_electronica.utils.bold_surcharge import (
+	normalize_bold_surcharge,
+	validate_bold_surcharge,
+)
 
 
 class CustomPOSInvoice(POSInvoice):
+	def validate(self):
+		# The browser previews the surcharge, but the server remains authoritative.
+		normalize_bold_surcharge(self)
+		super().validate()
+		validate_bold_surcharge(self)
+
 	def validate_pos_opening_entry(self):
 		"""Override to remove the 'outdated' date check.
 
@@ -45,17 +55,11 @@ class CustomPOSInvoice(POSInvoice):
 			if not item.allow_zero_valuation_rate:
 				item.allow_zero_valuation_rate = 1
 
-		try:
-			super().before_submit()
-		except AttributeError:
-			pass
+		super().before_submit()
 		self._clasificar_cliente_fe()
 
 	def on_submit(self):
-		try:
-			super().on_submit()
-		except AttributeError:
-			pass
+		super().on_submit()
 		if self.get("custom_enviar_dian"):
 			self._enviar_a_dian_inmediato()
 

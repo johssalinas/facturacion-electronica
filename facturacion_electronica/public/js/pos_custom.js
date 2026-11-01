@@ -545,20 +545,28 @@ frappe.require("point-of-sale.bundle.js", function () {
 		// Replace the submit_invoice event to skip confirmation
 		if (this.payment && this.payment.events) {
 			var me = this;
-			this.payment.events.submit_invoice = function () {
-				// Save first, then submit without confirmation
-				me.frm.save().then(function () {
-					frappe.xcall("frappe.client.submit", { doc: me.frm.doc }).then(function (r) {
-						me.frm.doc = r;
-						me.frm.dirty(false);
-						me.toggle_components(false);
-						me.toggle_submitted_invoice_summary(true);
-						frappe.show_alert({
-							indicator: "green",
-							message: __("POS invoice {0} created successfully", [r.name]),
-						});
+			this.payment.events.submit_invoice = async function () {
+				try {
+					var bold = window.facturacion_electronica && window.facturacion_electronica.bold_surcharge;
+					if (bold && bold.flush) await bold.flush(me.frm);
+
+					await me.frm.save();
+					var r = await frappe.xcall("frappe.client.submit", { doc: me.frm.doc });
+					me.frm.doc = r;
+					me.frm.dirty(false);
+					me.toggle_components(false);
+					me.toggle_submitted_invoice_summary(true);
+					frappe.show_alert({
+						indicator: "green",
+						message: __("POS invoice {0} created successfully", [r.name]),
 					});
-				});
+				} catch (error) {
+					frappe.msgprint({
+						title: __("No se pudo completar la venta"),
+						message: error.message || error,
+						indicator: "red",
+					});
+				}
 			};
 		}
 	};
@@ -817,232 +825,228 @@ frappe.require("point-of-sale.bundle.js", function () {
 
 
 // =============================================================================
-// 11. RECARGO BOLD 1.5% (soporta pago parcial y mixto)
+// 11. RECARGO BOLD 1.5% (pago completo, parcial y mixto)
 //
-// La comisión se calcula como 1.5% del MONTO PAGADO CON BOLD, no del total
-// de la factura. Así, si el cliente paga parte con Nequi y parte con Bold,
-// solo la parte de Bold genera comisión.
+// La cajera escribe la porción de la VENTA que se paga con Bold. El sistema
+// agrega el porcentaje configurado y reemplaza el importe Bold por:
+//   importe Bold = base escrita + recargo
 //
-// Ejemplo: factura $4.000, paga $2.000 Nequi + $2.000 Bold
-//   → comisión = 1.5% × $2.000 = $30
-//   → total factura = $4.030, Bold debe cubrir $2.030, Nequi $2.000
-//
-// Mecanismo: se observa el monto que el cajero escribe en el control de Bold
-// (frm.doc.payments[bold].amount). Cada vez que cambia, se recalcula una fila
-// de cargo (taxes, charge_type="Actual") = 1.5% de la porción Bold neta.
-//
-// "Porción Bold neta" = monto escrito en Bold − comisión previa, para que la
-// comisión sea sobre el valor real de venta que se paga con datáfono.
+// La regla contable también se aplica y valida en el servidor; este código
+// solo ofrece respuesta inmediata en el POS.
 // =============================================================================
 
-(function bold_surcharge_init() {
-	var BOLD_MODE_LOWER = "bold";
-	var BOLD_RATE       = 0.015;  // 1.5 %
-	var BOLD_TAX_DESC   = "Comisión Bold (1.5%)";
-	var BOLD_ACCOUNT    = "41351 - Comercio al por Mayor - SM";
+(function init_bold_surcharge() {
+	window.facturacion_electronica = window.facturacion_electronica || {};
+	if (window.facturacion_electronica.bold_surcharge) return;
 
-	var _busy = false;   // evita reentrancia durante el recalculo
-	var _timer = null;
-	var _last_bold_total = null;  // último amount de Bold que YA procesamos (venta+comisión)
+	var BOLD_MODE = "bold";
+	var BOLD_DESCRIPTION = "Comisión Bold (1.5%)";
+	var DEBOUNCE_MS = 350;
+	var states = new WeakMap();
+	var settings_cache = {};
 
-	// ── Helpers ────────────────────────────────────────────────────────────────
-	function get_bold_tax_row(frm) {
-		return (frm.doc.taxes || []).find(function (t) {
-			return t.description === BOLD_TAX_DESC;
-		});
-	}
-
-	function get_bold_payment(frm) {
-		return (frm.doc.payments || []).find(function (p) {
-			return (p.mode_of_payment || "").toLowerCase() === BOLD_MODE_LOWER;
-		});
-	}
-
-	function recalculate(frm) {
-		try {
-			frm.script_manager.trigger("calculate_taxes_and_totals");
-		} catch (e) {
-			console.error("[FE] recalculate error:", e);
+	function get_state(frm) {
+		var state = states.get(frm.doc);
+		if (!state) {
+			state = {
+				timer: null,
+				revision: 0,
+				pending: null,
+				running: null,
+				internal_gross: null,
+			};
+			states.set(frm.doc, state);
 		}
+		return state;
 	}
 
-	// ── Núcleo (Opción A): la cajera escribe la VENTA que paga por Bold, el
-	// sistema agrega el 1.5% de comisión encima ────────────────────────────────
-	//
-	//   venta_bold = lo que la cajera escribe en el control de Bold
-	//   comisión   = round(venta_bold × 0.015)
-	//   amount Bold (lo que pasa por el datáfono) = venta_bold + comisión
-	//
-	// Ejemplo: factura $4.000, cajera pone $2.000 en Nequi y escribe $2.000 en Bold
-	//   → comisión = $30
-	//   → Bold se ajusta a $2.030
-	//   → grand_total = $4.030   (Nequi $2.000 + Bold $2.030)
-	//
-	// Reto: al ajustar el amount de Bold a venta+comisión se dispara otro evento.
-	// Lo resolvemos guardando en _last_bold_total el valor ya procesado; si el
-	// evento entrante trae ese mismo valor, sabemos que es "nuestro" y lo
-	// ignoramos.
-	function refresh_bold_commission(controller) {
-		if (_busy) return;
-		var frm = controller.frm;
-		var pay = controller.payment;
-		if (!frm || !pay) return;
+	function is_bold_payment(row) {
+		return ((row && row.mode_of_payment) || "").trim().toLowerCase() === BOLD_MODE;
+	}
 
-		var bold_pay = get_bold_payment(frm);
-		var existing = get_bold_tax_row(frm);
+	function is_bold_tax(row) {
+		return Boolean(row && (row.custom_is_bold_surcharge || row.description === BOLD_DESCRIPTION));
+	}
 
-		var bold_amount = bold_pay ? flt(bold_pay.amount) : 0;
+	function currency_precision(frm) {
+		var field = frappe.meta.get_docfield(frm.doc.doctype, "grand_total", frm.doc.name);
+		return cint((field && field.precision) || frappe.sys_defaults.currency_precision || 2);
+	}
 
-		// Si el monto de Bold es exactamente el que dejamos la última vez,
-		// el evento lo disparamos nosotros → ignorar.
-		if (_last_bold_total !== null && Math.abs(bold_amount - _last_bold_total) <= 1) {
+	function round_currency(frm, value) {
+		return flt(value, currency_precision(frm));
+	}
+
+	async function get_settings(frm) {
+		var profile = frm.doc.pos_profile;
+		if (settings_cache[profile]) return settings_cache[profile];
+
+		var settings = await frappe.xcall(
+			"facturacion_electronica.utils.bold_surcharge.get_settings",
+			{ pos_profile: profile }
+		);
+		settings.rate = flt(settings.rate);
+		settings_cache[profile] = settings;
+		return settings;
+	}
+
+	function get_bold_tax_rows(frm) {
+		return (frm.doc.taxes || []).filter(is_bold_tax);
+	}
+
+	function remove_child_rows(frm, rows) {
+		(rows || []).forEach(function (row) {
+			frappe.model.clear_doc(row.doctype, row.name);
+		});
+		frm.refresh_field("taxes");
+	}
+
+	async function set_tax_row(frm, commission, settings) {
+		var rows = get_bold_tax_rows(frm);
+		if (!commission) {
+			remove_child_rows(frm, rows);
 			return;
 		}
 
-		// Bold en 0 → eliminar comisión
-		if (bold_amount <= 0) {
-			_last_bold_total = null;
-			if (existing) {
-				_busy = true;
-				frappe.model.clear_doc(existing.doctype, existing.name);
-				frm.doc.taxes = (frm.doc.taxes || []).filter(function (t) {
-					return t.name !== existing.name;
+		var row = rows.shift() || frm.add_child("taxes");
+		remove_child_rows(frm, rows);
+		await frappe.model.set_value(row.doctype, row.name, {
+			charge_type: "Actual",
+			account_head: settings.account,
+			description: BOLD_DESCRIPTION,
+			tax_amount: commission,
+			included_in_print_rate: 0,
+			custom_is_bold_surcharge: 1,
+		});
+		frm.refresh_field("taxes");
+	}
+
+	function refresh_pos_totals(frm) {
+		var controller = window.cur_pos;
+		if (!controller || controller.frm !== frm) return;
+		if (controller.cart && controller.cart.update_totals_section) {
+			controller.cart.update_totals_section(frm);
+		}
+		if (controller.payment) {
+			if (controller.payment.render_payment_mode_dom) {
+				controller.payment.render_payment_mode_dom();
+			}
+			if (controller.payment.update_totals_section) {
+				controller.payment.update_totals_section(frm.doc);
+			}
+		}
+	}
+
+	async function apply_pending(frm, state) {
+		if (state.running) return state.running;
+		if (!state.pending) return;
+
+		var pending = state.pending;
+		state.pending = null;
+		state.running = (async function () {
+			var row = locals[pending.cdt] && locals[pending.cdt][pending.cdn];
+			if (!row || !is_bold_payment(row) || row.parent !== frm.doc.name) return;
+
+			var settings = await get_settings(frm);
+			var base = round_currency(frm, pending.base);
+			var commission = round_currency(frm, base * settings.rate / 100);
+			var gross = round_currency(frm, base + commission);
+
+			frm.doc.custom_bold_base_amount = base;
+			frm.doc.custom_bold_surcharge_amount = commission;
+			frm.dirty();
+
+			await set_tax_row(frm, commission, settings);
+			await frm.script_manager.trigger("calculate_taxes_and_totals");
+
+			state.internal_gross = gross;
+			await frappe.model.set_value(row.doctype, row.name, "amount", gross);
+			await frm.script_manager.trigger("calculate_taxes_and_totals");
+			refresh_pos_totals(frm);
+
+			if (commission) {
+				frappe.show_alert(
+					{
+						message: __("Comisión Bold ({0}%): {1}", [
+							settings.rate,
+							format_currency(commission, frm.doc.currency),
+						]),
+						indicator: "blue",
+					},
+					3
+				);
+			}
+		})()
+			.catch(function (error) {
+				frappe.msgprint({
+					title: __("No se pudo calcular el recargo Bold"),
+					message: error.message || error,
+					indicator: "red",
 				});
-				recalculate(frm);
-				setTimeout(function () {
-					if (pay.update_totals_section) pay.update_totals_section(frm.doc);
-					_busy = false;
-				}, 500);
-			}
-			return;
-		}
-
-		// El monto entrante es la VENTA que la cajera quiere cobrar por Bold.
-		var venta_bold = bold_amount;
-		var commission = Math.round(venta_bold * BOLD_RATE);
-		var bold_total = venta_bold + commission;
-
-		_busy = true;
-
-		// Crear/actualizar la fila de comisión
-		if (existing) {
-			existing.tax_amount = commission;
-		} else {
-			frm.add_child("taxes", {
-				charge_type:  "Actual",
-				account_head: BOLD_ACCOUNT,
-				description:  BOLD_TAX_DESC,
-				tax_amount:   commission,
-				included_in_print_rate: 0,
+				throw error;
+			})
+			.finally(function () {
+				state.running = null;
 			});
-		}
 
-		recalculate(frm);
+		await state.running;
+		if (state.pending) return apply_pending(frm, state);
+	}
 
-		setTimeout(function () {
-			// Ajustar el amount de Bold a venta + comisión (lo que pasa por datáfono)
-			var bp = get_bold_payment(frm);
-			if (bp) {
-				bp.amount = bold_total;
-				frappe.model.set_value(bp.doctype, bp.name, "amount", bold_total);
-				var ctrl = pay[BOLD_MODE_LOWER + "_control"];
-				if (ctrl && ctrl.set_value) ctrl.set_value(bold_total);
+	function queue_base_amount(frm, cdt, cdn, base) {
+		var state = get_state(frm);
+		state.revision += 1;
+		state.pending = { cdt: cdt, cdn: cdn, base: base, revision: state.revision };
+		clearTimeout(state.timer);
+		state.timer = setTimeout(function () {
+			state.timer = null;
+			apply_pending(frm, state).catch(function () {
+				// apply_pending already displayed the actionable error to the cashier.
+			});
+		}, DEBOUNCE_MS);
+	}
+
+	frappe.ui.form.on("Sales Invoice Payment", {
+		amount: function (frm, cdt, cdn) {
+			if (frm.doc.doctype !== "POS Invoice") return;
+			var row = locals[cdt] && locals[cdt][cdn];
+			if (!is_bold_payment(row)) return;
+
+			var state = get_state(frm);
+			var amount = round_currency(frm, row.amount || 0);
+			if (state.internal_gross !== null && amount === state.internal_gross) {
+				state.internal_gross = null;
+				return;
 			}
-			_last_bold_total = bold_total;  // recordar para ignorar el eco del evento
 
-			if (pay.update_totals_section) pay.update_totals_section(frm.doc);
+			var tax_rows = get_bold_tax_rows(frm);
+			var stored_base = round_currency(frm, frm.doc.custom_bold_base_amount || 0);
+			var stored_commission = round_currency(
+				frm,
+				tax_rows.reduce(function (total, tax) { return total + flt(tax.tax_amount); }, 0)
+			);
+			if (stored_base && amount === round_currency(frm, stored_base + stored_commission)) {
+				return;
+			}
 
-			// Segunda pasada de seguridad: reconfirmar el monto tras el eco del
-			// evento de ERPNext (que puede repintar el control con el valor viejo).
-			setTimeout(function () {
-				var bp2 = get_bold_payment(frm);
-				if (bp2 && Math.abs(flt(bp2.amount) - bold_total) > 1) {
-					bp2.amount = bold_total;
-					frappe.model.set_value(bp2.doctype, bp2.name, "amount", bold_total);
-					var ctrl2 = pay[BOLD_MODE_LOWER + "_control"];
-					if (ctrl2 && ctrl2.set_value) ctrl2.set_value(bold_total);
-					if (pay.update_totals_section) pay.update_totals_section(frm.doc);
-				}
-				_busy = false;
-			}, 400);
+			queue_base_amount(frm, cdt, cdn, amount);
+		},
+	});
 
-			frappe.show_alert({
-				message: __("Comisión Bold (1.5%): {0}", [
-					format_currency(commission, frm.doc.currency)
-				]),
-				indicator: "blue",
-			}, 3);
-		}, 500);
+	async function flush(frm) {
+		var state = get_state(frm);
+		if (state.timer) {
+			clearTimeout(state.timer);
+			state.timer = null;
+		}
+		if (state.pending) await apply_pending(frm, state);
+		if (state.running) await state.running;
 	}
 
-	// ── Debounce del recálculo ─────────────────────────────────────────────────
-	function schedule_refresh(controller) {
-		clearTimeout(_timer);
-		_timer = setTimeout(function () {
-			refresh_bold_commission(controller);
-		}, 400);
-	}
+	window.facturacion_electronica.bold_surcharge = {
+		flush: flush,
+		clear_settings_cache: function () { settings_cache = {}; },
+	};
 
-	// ── Enganchar al evento de cambio de montos de pago ────────────────────────
-	// update_totals_section se llama cada vez que cambia cualquier monto de pago.
-	// Es el punto correcto para recalcular la comisión Bold.
-	//
-	// Aplicamos el override tanto en el PROTOTIPO como en la INSTANCIA viva
-	// (window.cur_pos.payment), con reintentos, porque el POS puede instanciar
-	// el componente Payment antes o después de que corra este script.
-	function install_hook() {
-		if (!window.erpnext || !erpnext.PointOfSale || !erpnext.PointOfSale.Payment) return false;
-
-		var proto = erpnext.PointOfSale.Payment.prototype;
-
-		// Override en el prototipo (si no está ya instalado)
-		if (!proto._bold_hooked) {
-			proto._bold_hooked = true;
-			var _orig_proto = proto.update_totals_section;
-			proto.update_totals_section = function (doc) {
-				var result = _orig_proto ? _orig_proto.apply(this, arguments) : undefined;
-				if (!_busy && window.cur_pos) schedule_refresh(window.cur_pos);
-				return result;
-			};
-		}
-
-		// Override en la instancia viva (por si se creó antes del override de proto)
-		var inst = window.cur_pos && window.cur_pos.payment;
-		if (inst && !inst._bold_hooked && inst.hasOwnProperty("update_totals_section")) {
-			inst._bold_hooked = true;
-			var _orig_inst = inst.update_totals_section.bind(inst);
-			inst.update_totals_section = function (doc) {
-				var result = _orig_inst(doc);
-				if (!_busy && window.cur_pos) schedule_refresh(window.cur_pos);
-				return result;
-			};
-		}
-
-		// Controller: limpiar estado al crear nueva factura
-		if (erpnext.PointOfSale.Controller && !erpnext.PointOfSale.Controller.prototype._bold_hooked) {
-			erpnext.PointOfSale.Controller.prototype._bold_hooked = true;
-			var _orig_new = erpnext.PointOfSale.Controller.prototype.create_new_invoice;
-			erpnext.PointOfSale.Controller.prototype.create_new_invoice = function () {
-				_busy = false;
-				_last_bold_total = null;
-				clearTimeout(_timer);
-				return _orig_new ? _orig_new.apply(this, arguments) : undefined;
-			};
-		}
-		return true;
-	}
-
-	// Instalar el hook con reintentos (el bundle puede tardar en cargar)
-	var _hook_attempts = 0;
-	var _hook_interval = setInterval(function () {
-		_hook_attempts++;
-		if (install_hook() || _hook_attempts > 100) {
-			clearInterval(_hook_interval);
-		}
-	}, 300);
-
-	// También intentar vía require (por si el interval no lo pilla a tiempo)
-	frappe.require("point-of-sale.bundle.js", function () { install_hook(); });
-
-	console.log("[FE] Recargo Bold 1.5% (pago parcial) inicializado.");
+	console.log("[FE] Recargo Bold 1.5% inicializado.");
 }());
