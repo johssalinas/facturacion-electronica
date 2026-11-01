@@ -12,6 +12,7 @@ required_apps = ["erpnext"]
 
 boot_session = "facturacion_electronica.events.auth.boot_session"
 on_login = "facturacion_electronica.events.auth.on_login"
+after_migrate = "facturacion_electronica.utils.setup_bold.run"
 
 override_doctype_class = {
 	"POS Invoice": "facturacion_electronica.overrides.pos_invoice.CustomPOSInvoice",
