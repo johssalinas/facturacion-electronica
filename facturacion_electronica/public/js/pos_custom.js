@@ -928,9 +928,21 @@ frappe.require("point-of-sale.bundle.js", function () {
 			controller.cart.update_totals_section(frm);
 		}
 		if (controller.payment) {
-			if (controller.payment.render_payment_mode_dom) {
-				controller.payment.render_payment_mode_dom();
-			}
+			// Do not call render_payment_mode_dom(): rebuilding the controls leaves
+			// selected_mode pointing at a detached input and breaks subsequent
+			// keypad edits. Update the existing controls and labels in place.
+			(frm.doc.payments || []).forEach(function (row) {
+				var key = controller.payment.sanitize_mode_of_payment(row.mode_of_payment);
+				var control = controller.payment[key + "_control"];
+				if (control && flt(control.get_value()) !== flt(row.amount)) {
+					control.set_value(row.amount);
+				}
+				if (controller.payment.$payment_modes) {
+					controller.payment.$payment_modes
+						.find("." + key + "-amount")
+						.html(row.amount ? format_currency(row.amount, frm.doc.currency) : "");
+				}
+			});
 			if (controller.payment.update_totals_section) {
 				controller.payment.update_totals_section(frm.doc);
 			}
