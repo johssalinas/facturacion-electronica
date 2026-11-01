@@ -1008,7 +1008,7 @@ frappe.require("point-of-sale.bundle.js", function () {
 
 	frappe.ui.form.on("Sales Invoice Payment", {
 		amount: function (frm, cdt, cdn) {
-			if (frm.doc.doctype !== "POS Invoice") return;
+			if (!["Sales Invoice", "POS Invoice"].includes(frm.doc.doctype) || !frm.doc.is_pos) return;
 			var row = locals[cdt] && locals[cdt][cdn];
 			if (!is_bold_payment(row)) return;
 

@@ -3,8 +3,20 @@ from frappe import _
 
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import SalesInvoice
 
+from facturacion_electronica.utils.bold_surcharge import (
+	normalize_bold_surcharge,
+	validate_bold_surcharge,
+)
+
 
 class CustomSalesInvoice(SalesInvoice):
+	def validate(self):
+		if self.get("is_pos"):
+			normalize_bold_surcharge(self)
+		super().validate()
+		if self.get("is_pos"):
+			validate_bold_surcharge(self)
+
 	def validate_pos_opening_entry(self):
 		"""Override to remove the 'outdated' date check.
 

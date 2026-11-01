@@ -86,6 +86,8 @@ fixtures = [
 						"POS Profile-custom_bold_surcharge_account",
 						"POS Invoice-custom_bold_base_amount",
 						"POS Invoice-custom_bold_surcharge_amount",
+						"Sales Invoice-custom_bold_base_amount",
+						"Sales Invoice-custom_bold_surcharge_amount",
 						"Sales Taxes and Charges-custom_is_bold_surcharge",
 						"POS Closing Entry-salidas_de_dinero",
 						"POS Closing Entry-generar_fe_cierre",

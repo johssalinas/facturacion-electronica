@@ -413,6 +413,32 @@
   },
   {
     "doctype": "Custom Field",
+    "name": "Sales Invoice-custom_bold_base_amount",
+    "dt": "Sales Invoice",
+    "fieldname": "custom_bold_base_amount",
+    "fieldtype": "Currency",
+    "label": "Base pagada con Bold",
+    "insert_after": "payments",
+    "hidden": 1,
+    "no_copy": 1,
+    "print_hide": 1,
+    "precision": "2"
+  },
+  {
+    "doctype": "Custom Field",
+    "name": "Sales Invoice-custom_bold_surcharge_amount",
+    "dt": "Sales Invoice",
+    "fieldname": "custom_bold_surcharge_amount",
+    "fieldtype": "Currency",
+    "label": "Recargo Bold",
+    "insert_after": "custom_bold_base_amount",
+    "hidden": 1,
+    "no_copy": 1,
+    "print_hide": 1,
+    "precision": "2"
+  },
+  {
+    "doctype": "Custom Field",
     "name": "Sales Taxes and Charges-custom_is_bold_surcharge",
     "dt": "Sales Taxes and Charges",
     "fieldname": "custom_is_bold_surcharge",
