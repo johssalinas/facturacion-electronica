@@ -928,9 +928,11 @@ frappe.require("point-of-sale.bundle.js", function () {
 			controller.cart.update_totals_section(frm);
 		}
 		if (controller.payment) {
-			// Do not call render_payment_mode_dom(): rebuilding the controls leaves
-			// selected_mode pointing at a detached input and breaks subsequent
-			// keypad edits. Update the existing controls and labels in place.
+			// ERPNext may rebuild payment controls when paid_amount changes. Preserve
+			// the selected mode by label, then point selected_mode at the new live
+			// control so subsequent keypad edits target the right payment.
+			var selected_label = controller.payment.selected_mode && controller.payment.selected_mode._label;
+
 			(frm.doc.payments || []).forEach(function (row) {
 				var key = controller.payment.sanitize_mode_of_payment(row.mode_of_payment);
 				var control = controller.payment[key + "_control"];
@@ -943,6 +945,16 @@ frappe.require("point-of-sale.bundle.js", function () {
 						.html(row.amount ? format_currency(row.amount, frm.doc.currency) : "");
 				}
 			});
+
+			if (selected_label) {
+				var selected_key = controller.payment.sanitize_mode_of_payment(selected_label);
+				var live_control = controller.payment[selected_key + "_control"];
+				if (live_control) controller.payment.selected_mode = live_control;
+				if (controller.payment.highlight_selected_mode) {
+					controller.payment.highlight_selected_mode();
+				}
+			}
+
 			if (controller.payment.update_totals_section) {
 				controller.payment.update_totals_section(frm.doc);
 			}
