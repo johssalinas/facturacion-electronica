@@ -31,7 +31,7 @@ trimestral, anual), con variación de precio y de costo contra el período anter
 
 Filtros: empresa, fechas, vista, período, grupo de producto, producto, almacén, base de costo,
 resultado (ganancia / pérdida / sin costo confiable), columnas (completo o compacto para PDF),
-solo vendidos y excluir costos sospechosos. Exportar a Excel o PDF con el menú del reporte;
+incluir productos sin ventas e incluir costos sospechosos (ambos apagados por defecto). Exportar a Excel o PDF con el menú del reporte;
 el formato "Compacto" deja 16 columnas para que el PDF sea legible.
 
 ## Cómo se calcula el costo (importante)
@@ -46,8 +46,8 @@ Un producto **sin ninguna compra registrada** no tiene costo conocido. No se inv
 queda como "Sin costo" y sus ventas se muestran aparte en "Ventas sin costo confiable".
 
 Un producto cuyo margen cae fuera de −100 % a 99 % se marca "Costo sospechoso" (casi siempre es
-una unidad de medida o un precio de compra mal digitado). Con **Excluir costos sospechosos**
-activo, no entra en utilidad, margen ni valor del inventario.
+una unidad de medida o un precio de compra mal digitado). Por defecto no entra en utilidad,
+margen ni valor del inventario; marque **Incluir costos sospechosos** para verlo sumado.
 
 ## Datos que conviene corregir en ERPNext
 

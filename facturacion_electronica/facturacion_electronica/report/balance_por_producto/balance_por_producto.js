@@ -111,16 +111,16 @@ frappe.query_reports["Balance por Producto"] = {
 			default: "Completo",
 		},
 		{
-			fieldname: "solo_vendidos",
-			label: "Solo productos vendidos en el rango",
+			fieldname: "incluir_sin_ventas",
+			label: "Incluir productos sin ventas",
 			fieldtype: "Check",
-			default: 1,
+			default: 0,
 		},
 		{
-			fieldname: "excluir_sospechosos",
-			label: "Excluir costos sospechosos",
+			fieldname: "incluir_sospechosos",
+			label: "Incluir costos sospechosos",
 			fieldtype: "Check",
-			default: 1,
+			default: 0,
 		},
 	],
 

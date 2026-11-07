@@ -179,8 +179,10 @@ def normalizar_filtros(filters):
 	f.periodo = f.periodo if f.periodo in PERIODOS else "Mensual"
 	f.base_costo = f.base_costo if f.base_costo in BASES else BASE_COMPRA
 	f.resultado = f.resultado if f.resultado in RESULTADOS else "Todos"
-	f.solo_vendidos = 1 if f.solo_vendidos is None else cint(f.solo_vendidos)
-	f.excluir_sospechosos = 1 if f.excluir_sospechosos is None else cint(f.excluir_sospechosos)
+	# Frappe no envia los checks desmarcados: por eso estos filtros se definen como
+	# "incluir_..." y vienen apagados por defecto.
+	f.solo_vendidos = 0 if cint(f.incluir_sin_ventas) else 1
+	f.excluir_sospechosos = 0 if cint(f.incluir_sospechosos) else 1
 	f.formato = f.formato if f.formato in FORMATOS else FORMATO_COMPLETO
 	grafico = f.grafico if f.vista == VISTA_RESUMEN else (f.grafico_evol or f.grafico)
 	f.grafico = grafico if grafico in GRAFICOS else None
@@ -1131,7 +1133,7 @@ class Analisis:
 						f"<b>{t['sospechosos']} productos tienen un costo que parece un error de datos</b> "
 						f"(ventas por {dinero(t['sospechosos_monto'])}, margen fuera de {MARGEN_MIN:.0f}% a {MARGEN_MAX:.0f}%). "
 						"Se excluyeron de la utilidad, el margen y el valor del inventario. "
-						"Desmarque «Excluir costos sospechosos» para verlos."
+						"Marque «Incluir costos sospechosos» para verlos."
 					)
 				else:
 					avisos.append(
@@ -1185,7 +1187,6 @@ def tarjeta(filters=None):
 			"from_date": desde,
 			"to_date": hasta,
 			"base_costo": args.base_costo,
-			"solo_vendidos": 1,
 		}
 	)
 

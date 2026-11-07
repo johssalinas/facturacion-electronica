@@ -54,6 +54,8 @@ TARJETAS = [
 	("Ventas sin costo confiable (mes)", "sin_costo", "Mes actual", "#F1C40F"),
 ]
 
+KPI_DINERO = {"ventas", "compras", "utilidad", "inventario", "sin_costo"}
+
 FILTROS_FECHA = {
 	"from_date": "frappe.datetime.year_start()",
 	"to_date": "frappe.datetime.get_today()",
@@ -188,6 +190,7 @@ def _id():
 # Number Cards y Dashboard Charts
 # --------------------------------------------------------------------------- #
 def crear_tarjetas():
+	moneda = frappe.defaults.get_global_default("currency") or "COP"
 	for nombre, kpi, rango, color in TARJETAS:
 		_guardar(
 			"Number Card",
@@ -204,6 +207,8 @@ def crear_tarjetas():
 				"is_standard": 0,
 				"show_full_number": 1,
 				"color": color,
+				# Frappe aplica la moneda de la tarjeta a cualquier valor: solo las tarjetas de dinero la llevan
+				"currency": moneda if kpi in KPI_DINERO else None,
 				"filters_json": json.dumps({"kpi": kpi, "rango": rango}),
 			},
 		)
@@ -471,32 +476,36 @@ def enlazar_sidebars_nativos():
 
 
 def enlazar_workspaces_nativos():
-	"""Agrega los atajos al inicio de los espacios Selling y Stock."""
+	"""Agrega el atajo al reporte al inicio de los espacios Selling y Stock.
+
+	Los atajos de tipo Report se ocultan solos a quien no tiene permiso. No se usa un atajo URL
+	para el panel porque Frappe no lo filtra por permisos (la cajera lo veria)."""
 	for nombre in ("Selling", "Stock"):
 		if not frappe.db.exists("Workspace", nombre):
 			continue
 		ws = frappe.get_doc("Workspace", nombre)
-		etiquetas = {s.label for s in ws.shortcuts}
 		cambio = False
-		if REPORT not in etiquetas:
+
+		# Limpieza de la version anterior, que agregaba un atajo URL "Panel de Balance"
+		anteriores = [s for s in ws.shortcuts if s.label == PANEL_LABEL]
+		for s in anteriores:
+			ws.remove(s)
+			cambio = True
+
+		if REPORT not in {s.label for s in ws.shortcuts}:
 			ws.append("shortcuts", _atajo(REPORT, REPORT, "Item", "Blue"))
 			cambio = True
-		if PANEL_LABEL not in etiquetas:
-			ws.append(
-				"shortcuts",
-				{"label": PANEL_LABEL, "type": "URL", "url": "/app/balance-de-productos", "color": "Blue"},
-			)
+
+		bloques = json.loads(ws.content or "[]")
+		limpios = [b for b in bloques if b.get("data", {}).get("shortcut_name") != PANEL_LABEL]
+		if len(limpios) != len(bloques):
+			cambio = True
+		if not any(b.get("data", {}).get("shortcut_name") == REPORT for b in limpios):
+			limpios.insert(0, _bloque("shortcut", shortcut_name=REPORT, col=3))
 			cambio = True
 		if not cambio:
 			continue
-
-		bloques = json.loads(ws.content or "[]")
-		ya = {b.get("data", {}).get("shortcut_name") for b in bloques if b.get("type") == "shortcut"}
-		nuevos = []
-		for etiqueta in (REPORT, PANEL_LABEL):
-			if etiqueta not in ya:
-				nuevos.append(_bloque("shortcut", shortcut_name=etiqueta, col=3))
-		ws.content = json.dumps(nuevos + bloques)
+		ws.content = json.dumps(limpios)
 		ws.flags.ignore_permissions = True
 		ws.save()
 
