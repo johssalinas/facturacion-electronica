@@ -392,6 +392,7 @@ def crear_sidebar_e_icono():
 			"icon_type": "Link",
 			"link_type": "Workspace Sidebar",
 			"link_to": WORKSPACE,
+			"icon": "chart",
 			"parent_icon": "ERPNext" if frappe.db.exists("Desktop Icon", "ERPNext") else None,
 			"app": APP,
 			"standard": 1,

@@ -1210,8 +1210,9 @@ def tarjeta(filters=None):
 	tipo = {"margen": "Percent", "perdiendo": "Int", "alertas": "Int"}.get(kpi, "Currency")
 
 	return {
-		"value": valor,
+		"value": round(valor, 2),
 		"fieldtype": tipo,
+		"precision": 2 if tipo == "Percent" else None,
 		"route": ["query-report", "Balance por Producto"],
 		"route_options": {
 			"from_date": str(f.from_date),
